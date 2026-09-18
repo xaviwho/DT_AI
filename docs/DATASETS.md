@@ -200,3 +200,78 @@ predict self-reported stress (weaker, and the exact framing PROJECT_PLAN.md
 collection with a performance task.
 
 This is a scoping decision for the group, not a technical one.
+
+---
+
+## Nurse Stress — full dataset acquired and aligned (2026-09-18)
+
+`Stress_dataset.zip` downloaded manually. **Integrity verified**:
+1,156,939,542 bytes, SHA-256
+`86e7146cbb124f9b5e37bc5bd8fa63f8786379dfdb10dfc9fdc5fd6c41e63407`,
+exact match to Dryad's published digest.
+
+Structure: 15 folders (matching the survey IDs exactly), containing **609
+nested per-session zips** named `<ID>_<unix_start>.zip`. Each is a standard
+Empatica E4 export: `ACC/BVP/EDA/HR/IBI/TEMP.csv`, `tags.csv`, `info.txt`.
+E4 CSVs carry the start epoch on line 1 and the sample rate on line 2
+(EDA 4 Hz, HR 1 Hz, BVP 64 Hz, ACC 32 Hz).
+
+All 609 sessions are readable. **1,252 hours** of recording, median session
+70 min. Per-nurse totals range 24–150 h. A session index is cached at
+`data/interim/e4_sessions.csv`.
+
+### Timezone: UTC-5, solved empirically
+
+Survey times are local; E4 timestamps are UTC. Sweeping candidate offsets
+and maximising survey/signal overlap gives an unambiguous peak at **UTC-5**
+(US Central Daylight Time, consistent with the hospital and the Apr–Dec 2020
+window):
+
+    UTC-5: 227 reports overlap (63%)   <- peak
+    UTC-6: 189 (53%)
+    UTC-4: 164 (46%)
+
+This offset is an inference, not documented. It should be stated as an
+assumption in any writeup.
+
+### Attrition: 358 reports -> 149 usable examples
+
+| Stage | n | nurses |
+|---|---|---|
+| All survey reports | 358 | 15 |
+| Labelled (not `'na'`) | 245 | 15 |
+| Labelled **and** signal-covered | 166 | **12** |
+| Binary (0 vs 2), >90% covered | **149** | **12** |
+
+Class balance of the usable binary set: **class 0 = 23, class 2 = 126**
+(85% majority). Only **10 of 12** nurses have both classes.
+
+Three nurses (`15`, `83`, `94`) have labels but **no overlapping signal at
+all** and drop out entirely — note that `83` and `94` are among the
+best-recorded nurses by hours, so this is a scheduling mismatch, not a
+device-failure story.
+
+Coverage is close to all-or-nothing: relaxing the threshold from >90% to
+>0% recovers only 3 more reports (163 -> 166). Sessions either span a
+report window or miss it entirely, so the threshold choice is not a
+sensitive parameter.
+
+### What this means
+
+The modelling target is a **binary, heavily imbalanced, small-n** problem:
+149 examples, 23 in the minority class, spread over 10 usable nurses —
+roughly 2 minority examples per nurse.
+
+Consequences, all of which should be settled before modelling starts:
+
+- Subject-level cross-validation is mandatory, and with 23 positives it
+  will have very high variance. Report confidence intervals; a single
+  accuracy number will be meaningless.
+- Accuracy is the wrong metric at 85% majority. Use AUROC/AUPRC with
+  subject-level bootstrap.
+- The earlier non-random missingness finding compounds this: nurses drop
+  out both from `'na'` labels and from coverage gaps, and these are
+  different subsets.
+
+H2 remains untestable: there is still no performance outcome anywhere in
+the corpus.
