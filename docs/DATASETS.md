@@ -275,3 +275,73 @@ Consequences, all of which should be settled before modelling starts:
 
 H2 remains untestable: there is still no performance outcome anywhere in
 the corpus.
+
+---
+
+## Wearable Exam Stress — acquired (2026-09-18). The only objective outcome we hold.
+
+PhysioNet, open, no credentialing:
+https://physionet.org/content/wearable-exam-stress/1.0.0/
+Amin, Wickramasuriya & Faghih (2022), doi:10.13026/kvkb-aj90.
+`exam_stress.zip`, 85,968,624 bytes, `unzip -t` clean, SHA256SUMS verified.
+
+Acquired after the group ruled out pursuing the TILES DUA (a prior TILES
+request went unanswered). This is the open-data answer to the missing
+performance outcome.
+
+10 students x 3 exams (Midterm 1, Midterm 2, Final) = **30 sessions**.
+Empatica E4 — the **same device and file format as the Nurse dataset**, so
+the feature pipeline is shared.
+
+### Coverage: complete. No attrition.
+
+All 30 sessions present and readable, and **every recording exceeds its
+exam duration** (midterms are 1.5 h, recordings median 3.3 h; final is 3 h,
+recordings median 5.9 h). Shortest session is 2.77 h against a 1.5 h exam.
+
+This means every session also contains **pre-exam baseline**, which makes
+anticipatory stress modellable — something the nurse data cannot support.
+
+Contrast with the nurse corpus: 358 reports -> 149 usable (58% attrition).
+Here: 30 -> 30.
+
+### Outcome: continuous, with real within-subject variance
+
+Grades (final is out of 200; normalised to % below):
+
+    sid  FINAL  MID1  MID2        sid  FINAL  MID1  MID2
+    S1    91.0  78.0  82.0        S6    87.5  71.0  64.0
+    S2    90.0  82.0  85.0        S7    55.0  64.0  33.0
+    S3    94.0  77.0  90.0        S8    92.0  92.0  88.0
+    S4    74.5  75.0  77.0        S9    63.0  80.0  39.0
+    S5    78.5  67.0  77.0        S10   58.0  89.0  64.0
+
+- Overall: mean 75.2%, SD 15.3, range 33–94.
+- Between-subject SD: 12.5
+- **Within-subject SD: median 7.8, max 20.6** (S9 ranges 39–80, S10 58–89)
+
+The within-subject variance is the important part. It supports a
+**repeated-measures design**: does a student's physiological state on exam
+day predict their deviation from their *own* baseline performance? That
+controls for ability, which is the main confound in any cross-sectional
+grade analysis, and is far better powered at n=30 than a between-subject
+comparison would be.
+
+Note S4 (within-SD 1.3) and S8 (2.3) are nearly flat and contribute little
+to a within-subject model; S9, S10, S7 and S6 carry most of the signal.
+
+### Timing
+
+All exams start 09:00 CT/CDT. Timestamps are **date-shifted for
+deidentification but not time-shifted**, and the shift preserves
+daylight-saving status — so time-of-day is valid, calendar date is not.
+
+### Role in the project
+
+This is the only dataset we hold with an **objective, continuous
+performance outcome**. It makes H1 testable as originally worded
+(predicting performance, not a self-report proxy).
+
+Its limits: n=10 subjects, 3 points each. It cannot carry H2 — three
+performance samples is not a trajectory — and generalisation from students
+to occupational settings must be argued, not assumed.
