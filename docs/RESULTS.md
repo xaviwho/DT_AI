@@ -124,3 +124,109 @@ correction or cross-validate.
 
 Claim 3 with its caveats is a legitimate finding. Claiming prediction of
 performance from physiology is not supported by these data.
+
+---
+
+# Results — H1 on the Nurse Stress corpus
+
+Reproduce with:
+
+    python -m src.data.nurse              # builds data/processed/nurse_features.csv
+    python -m src.eval.make_figures_nurse # writes reports/figures/fig3_nurse_null.png
+
+## Design
+
+Binary **low (0) vs high (2)** self-reported stress; the middle class is
+dropped (14 usable instances, absent for most nurses). Same five
+pre-specified features as the exam analysis, same leave-one-subject-out
+protocol, same within-subject centring.
+
+Predictions are **pooled across folds before scoring**: many held-out
+nurses contribute only one class, so per-fold AUROC is undefined.
+
+Scoring is AUROC and AUPRC, never accuracy — prevalence is 82%, so a
+constant "high stress" prediction would score 0.82 and mean nothing.
+
+## Attrition (Fig 3, left)
+
+| Stage | n | nurses |
+|---|---|---|
+| All survey reports | 358 | 15 |
+| Labelled (not `'na'`) | 245 | 15 |
+| + ≥90% E4 coverage | 163 | 12 |
+| + binary (0 vs 2) | 149 | 12 |
+| + nurse contributes both classes | **129** | **10** |
+
+The last filter matters: a nurse with only one class cannot inform a
+within-subject discrimination and would only inflate the apparent n.
+
+A further constraint: a 30-minute pre-report baseline exists for only
+**101 of 163** usable reports, so reactivity features are secondary here.
+HRV is available for 150 of 163 — reports are short (median 6–10 min), so
+the E4's IBI stream is often sparse.
+
+## Result — no discrimination (Fig 3, centre and right)
+
+| Specification | n | nurses | AUROC | AUPRC | chance AUPRC |
+|---|---|---|---|---|---|
+| **Absolute, within-nurse centred (primary)** | 129 | 10 | **0.544** | 0.833 | 0.822 |
+| Absolute, raw | 129 | 10 | 0.496 | 0.811 | 0.822 |
+| Reactivity vs 30-min baseline | 60 | 8 | 0.416 | 0.695 | 0.750 |
+
+Permutation test (labels shuffled **within nurse**, 300 draws):
+**p = 0.299** (null AUROC mean 0.493, SD 0.088).
+Subject-level bootstrap 95% CI: **[0.416, 0.683]** — spans 0.5.
+
+No single feature approaches significance (best: activity counts,
+ρ = +0.125, p = .160).
+
+## The EDA finding does not replicate
+
+This is the most informative comparison in the project.
+
+| Feature | Exam corpus (vs grade) | Nurse corpus (vs stress) |
+|---|---|---|
+| SCR rate | ρ = **−0.397**, p = .030 | ρ = +0.075, p = .401 |
+| EDA tonic | ρ = **−0.375**, p = .041 | ρ = −0.042, p = .637 |
+
+The exam corpus's nominally significant EDA effects are absent here.
+
+Two readings, and the data cannot separate them:
+
+1. The exam effects were false positives — consistent with their failing
+   Holm correction.
+2. The outcomes differ. The exam corpus predicts an **objective**
+   performance score; the nurse corpus predicts a **self-report**.
+   Physiology and self-reported stress are known to decouple, so a genuine
+   physiology-performance link need not appear as a
+   physiology-self-report link.
+
+Reading 2 is the more interesting hypothesis and cannot be tested without
+a corpus carrying both outcome types — which is exactly what TILES would
+have provided and no open dataset does.
+
+## Power
+
+| Comparison | Minimum detectable AUROC (80% power) |
+|---|---|
+| Pooled n=129 (106 high / 23 low) | 0.662 |
+| Clustered, treating each nurse as one unit | 0.792 |
+
+Observed AUROC is 0.544. As with the exam corpus, the study is
+**underpowered for moderate effects**: an AUROC of 0.60–0.65, which would
+be scientifically meaningful, is below this design's detection floor.
+
+## Combined conclusion across both corpora
+
+1. The E4 pipeline is validated (exam manipulation check, large effects).
+2. Neither corpus supports predicting the outcome from physiology using a
+   pre-specified feature set and honest subject-level validation.
+3. The one suggestive signal (EDA arousal vs objective performance) does
+   not survive multiplicity correction and does not replicate against a
+   self-report outcome.
+4. Both studies are underpowered for the effect sizes actually observed,
+   so **"no effect" and "a real moderate effect" remain indistinguishable**.
+
+This is a credible negative-results and methods contribution. It is not
+evidence for a deployable stress-or-performance monitor, and must not be
+written up as one.
