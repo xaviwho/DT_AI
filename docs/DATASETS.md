@@ -137,3 +137,66 @@ Two limits:
 time-resolved performance outcome.** The Nurse Stress dataset is therefore
 not the preferred option — it is load-bearing. Until it is obtained, the
 project as scoped in PROJECT_PLAN.md cannot be executed.
+
+---
+
+## Nurse Stress — SurveyResults.xlsx acquired and analysed (2026-09-18)
+
+Downloaded manually. **Integrity verified**: 49,048 bytes, SHA-256
+`4ee7733f8e8da362af33a765c495f4a5ed8302b5af39327c2cdb420a27def2b3`,
+an exact match to Dryad's published digest. Stored in
+`data/raw/nurse_stress/` (gitignored).
+
+One sheet, 358 rows x 20 cols. Each row is a self-reported stress event with
+`Start time`, `End time`, `duration`, `date`, `Stress level`, plus 14 binary
+stressor-category flags (COVID related, Patient in Crisis, Increased
+Workload, ...) and a free-text `Description`. Dates span 2020-04-14 to
+2020-12-13 — the COVID period, which is a confound to state explicitly.
+
+### Density: adequate
+
+15 nurses, median 23 reports each (range 4–46), median 9 distinct shift
+dates per nurse. Event durations are short, mostly 3–15 min.
+
+### Three problems that constrain the design
+
+**1. `Stress level` is 32% missing.** 113 of 358 are the string `'na'`
+(note: string, not a NaN — it silently makes the column dtype `object`, and
+any naive `astype(int)` will crash or coerce wrongly).
+
+**2. Missingness is far from random.** Per-nurse `'na'` fraction ranges from
+0.00 to 0.65:
+
+    CE 0.65   DF 0.62   EG 0.55   94 0.53   6B 0.43   15 0.40
+    83 0.30   BG 0.28   7A 0.24   5C 0.20   E4 0.12   8B 0.06
+    6D 0.00   7E 0.00   F5 0.00
+
+Complete-case analysis therefore silently reweights the cohort toward four
+nurses. This needs stating in any writeup, and argues for a
+missingness-aware model rather than dropping rows.
+
+**3. The middle class is too rare to model.** Labelled distribution is
+level 2 = 179, level 0 = 46, level 1 = **20**. Level 1 is absent entirely in
+9 of 15 nurses.
+
+| Design | Viable? |
+|---|---|
+| 3-class (0/1/2) | **No.** n=20 in class 1, absent for 9/15 nurses |
+| Binary (0 vs 2) | **Yes.** 46 vs 179, and 13 of 15 nurses have both classes |
+
+Per-nurse labelled totals are small (median 16, min 4), so subject-level
+cross-validation will have high variance. Report confidence intervals, not
+point accuracies.
+
+### The finding that matters most for the plan
+
+**This dataset has labelled stress, not performance.** There is no reaction
+time, no error rate, no task outcome — only self-reported stress level.
+
+H1 is currently worded as predicting *performance decrement*. No dataset we
+now hold can test that, including this one. H1 must either be reworded to
+predict self-reported stress (weaker, and the exact framing PROJECT_PLAN.md
+§9 warns reviewers will push back on), or the project needs new data
+collection with a performance task.
+
+This is a scoping decision for the group, not a technical one.
