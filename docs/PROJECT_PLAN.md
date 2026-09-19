@@ -1,125 +1,102 @@
-# AI-Driven Digital Twin for Stress, Decision-Making, and Error Risk in High-Risk Work
+# Physiological state detection in high-demand work — revised plan
 
-Working title (tightened from the group proposal):
-**"A physiological digital twin for predicting acute cognitive-performance decrement in high-risk occupational work"**
+**Revised 2026-09-19** after data acquisition and analysis. The original
+plan (commit `1d87367`) is superseded; what changed and why is recorded in
+§1 so the group can see which assumptions died.
 
-Team: Evans (neuro), Maame Yaa (safety/human factors), Victor (AI/digital twin),
-Barry + Calista (comp bio / biomarkers).
+Team: Evans (neuro), Maame Yaa (safety/human factors), Victor (AI/pipeline),
+Barry + Calista (comp bio) — **roles revised, see §5**.
 
 ---
 
-## 1. The problem with the proposal as written
+## 1. What changed from the original plan
 
-"Digital twin of a worker under stress" is a framing, not a hypothesis. Five
-contributors each adding a discipline to one narrative tends to produce a
-review paper. To publish an empirical result we need **one falsifiable
-prediction target measurable in one dataset**, with the other disciplines
-supplying features, priors, and interpretation.
-
-## 2. Proposed testable core
-
-**H1.** A latent state model (arousal, fatigue, cognitive load) inferred from
-wearable physiology predicts near-term decrement in task performance
-(reaction time / error rate) better than (a) raw physiological features and
-(b) time-on-task alone.
-
-**H2 (twin claim).** The same fitted latent model, run forward as a
-simulator, reproduces held-out subjects' performance trajectories under
-unseen stressor schedules — i.e. it is a *twin*, not just a classifier.
-
-H2 is what earns the "digital twin" word. Without it, reviewers will call
-this stress classification, which is a saturated literature.
-
-## 3. Architecture (three layers, mapped to people)
-
-    Layer 3  Risk / decision      RL or POMDP policy: when to rotate, rest,   -> Evans
-             (action selection)   or reassign a worker given twin state
-                  ^
-    Layer 2  Latent state twin    State-space model (fatigue, arousal, load)  -> Victor
-                  ^               fitted per-subject, forward-simulable
-    Layer 1  Observation model    HRV, EDA, ACC, temp, skin conductance       -> Barry/Calista
-                                  + salivary cortisol/alpha-amylase where
-                                  available
-
-    Context / labels             Task demand, shift, incident taxonomy        -> Maame Yaa
-
-Concretely for Layer 2: start with a **switching linear dynamical system** or
-a **latent ODE / neural state-space model**. Both are forward-simulable
-(needed for H2) and interpretable enough for a health audience. Do not start
-with a black-box LSTM classifier — it cannot support H2.
-
-## 4. Datasets that actually exist and are downloadable
-
-Ranked by fit. All are public; none require IRB for secondary analysis, but
-check each license.
-
-| Dataset | What it gives | Fit |
+| Original assumption | Reality | Source |
 |---|---|---|
-| **Nurse Stress (Hosseini et al. 2022, Dryad)** | Empatica E4 (EDA, HRV, temp, ACC) on nurses during real hospital shifts, with self-reported stress events | **Best.** Real occupational stress, real shift structure. Closest to the target population. |
-| **WESAD (UCI)** | 15 subjects, chest+wrist, baseline/stress/amusement, TSST protocol | Best for validating the observation model; lab-controlled, well-benchmarked |
-| **MMASH (PhysioNet)** | 24h actigraphy, HRV, sleep, **salivary cortisol + melatonin**, psych questionnaires | The biomarker bridge for Barry/Calista. Links physiology to endocrine markers |
-| **DriveDB / Stress Recognition in Automobile Drivers (PhysioNet)** | ECG, EMG, EDA during real driving with graded stress | Good second cohort for generalization tests |
-| **EEGMAT (PhysioNet)** | EEG during mental arithmetic under time pressure | Only if Evans wants a neural (not just autonomic) channel |
-| **OSHA Severe Injury Reports + NIOSH FACE reports** | Incident narratives, construction/disaster context | Maame Yaa's layer: taxonomy of error modes, and the *justification* for which outcomes matter. Not a modeling dataset — narrative text |
-| **SWELL-KW** | Knowledge work under stressors, physiology + performance | Has explicit task-performance labels, useful for H1 |
+| Nurse Stress carries the study | Usable n=149 → 129 after filters, 10 nurses; self-report only | `DATASETS.md` |
+| Biomarker layer via MMASH cortisol | **2 saliva samples per subject**, 44 values total | `DATASETS.md` |
+| H2 forward simulation is the headline | No open corpus has performance trajectories | `DATASETS.md` |
+| TILES as primary corpus | DUA ruled out by the group (prior request unanswered) | group decision |
+| H1 predicts performance decrement | Not supported out-of-subject in either corpus | `RESULTS.md` |
+| DriveDB gives 18 subjects | 14; drive13/14 bit-identical; `marker` unusable | `DATASETS.md` |
 
-**The honest gap:** no public dataset has (physiology + performance + real
-disaster/construction incidents) in one place. Options:
+**What survived and got stronger:** state detection. AUROC 0.933
+[0.885, 0.973], permutation p = .002.
 
-1. Model on nurse/driver data, frame construction/disaster as the
-   *translation target* — argue transfer, don't claim it.
-2. Add a small in-house VR or simulated-task study (PVT + stressor) to close
-   the loop. This is the highest-value original contribution if any of you
-   can run 20-30 participants.
-3. Use OSHA narratives only for an error taxonomy that defines the outcome
-   variable. Legitimate, but it's a framing contribution.
+## 2. Current claim set
 
-Option 1 is the fastest publishable path. Option 2 is what turns this into a
-grant.
-
-## 5. Role assignment (concrete, not thematic)
-
-| Person | Owns | Deliverable |
+| Claim | Status | Evidence |
 |---|---|---|
-| Victor | Layers 1-2, pipeline, all code | Fitted twin, held-out simulation results, repo |
-| Evans | Layer 3 + neuro framing | RL/POMDP policy, priors on the latent structure, Intro + Discussion |
-| Maame Yaa | Outcome definition, human-factors framing | Error taxonomy from OSHA/FACE, translation section |
-| Barry / Calista | Biomarker channel | Cortisol/amylase analysis on MMASH; feasibility note on saliva sampling in field |
-| Rotating | Lit review, writing | Shared |
+| Wrist physiology detects high-demand task episodes | **Supported** | AUROC 0.93, LOSO, p=.002 |
+| EDA reactivity tracks within-subject performance | **Suggestive** | ρ=−0.44, p=.015, Holm p=.074 |
+| Detector is arousal-based not posture-based | **Not supported** | EDA alone at chance (0.398) |
+| Physiology predicts performance out-of-subject | **Not supported** | LOSO R² < 0 |
+| Physiology discriminates self-reported stress | **Not supported** | AUROC 0.544, nurses |
 
-Rule: every author owns a figure or a table. If someone doesn't, they are an
-acknowledgement, not an author.
+## 3. Revised hypotheses
 
-## 6. Milestones
+- **H1a (delivered).** Wrist-worn physiology discriminates high-demand task
+  episodes from matched pre-task baseline, across held-out subjects.
+- **H1b (open, powered by the follow-up).** Within-subject electrodermal
+  reactivity is negatively associated with relative performance.
+  Directional, pre-specified — see `STUDY_PROTOCOL.md`.
+- **H2 (reframed).** No longer an empirical claim. The forward-simulable
+  state-space architecture is presented as a **design contribution** with
+  H1a as its validated first stage. It is not evidenced and must not be
+  written as capability.
 
-- **W1-2** Dataset access + licenses; agree the outcome variable
-- **W3-4** Layer 1 reproduction: match published WESAD stress-detection baselines. If we can't reproduce known results, stop and fix the pipeline
-- **W5-8** Layer 2 fit on nurse data; H1 test vs. two baselines
-- **W9-10** H2 test: forward simulation on held-out subjects
-- **W11-12** Layer 3 policy; ablations
-- **W13-16** Writing
+## 4. Deliverables
 
-## 7. Target venues
+1. **Paper 1 (ready to write).** State detection + the methodological
+   findings: duration-matching artifact, activity confounding, EDA-vs-
+   temperature wear gating, the two-corpus null. Figures 1–4 exist.
+2. **Study protocol** for the confirmatory H1b test (`STUDY_PROTOCOL.md`).
+3. **Paper 2 (conditional)** on the follow-up data.
 
-Ordered by realistic fit for the H1+H2 result:
+## 5. Revised roles
 
-1. *IEEE Journal of Biomedical and Health Informatics* — best match for wearable + state-space
-2. *IEEE Trans. Human-Machine Systems* — if Layer 3 is strong
-3. *Safety Science* / *Automation in Construction* — if the construction translation is real, not aspirational
-4. *npj Digital Medicine* — needs the biomarker layer to be substantive
-5. *Scientific Reports* / *PLOS One* — fallback, sound-science venues
-6. *Frontiers in AI* — viable but weakest signal
+The biomarker channel is cut — there is no cortisol data to analyse. This
+is a data reality, not a judgement on the people.
 
-## 8. Funding hooks (as framed in the group note)
+| Person | Revised ownership |
+|---|---|
+| Victor | Pipeline, all analysis, Figs 1–4, Methods |
+| Evans | Interpretation of the cardiac/motor vs arousal distinction; why EDA fails here; Discussion |
+| Maame Yaa | Translation section: what episode-level detection is and is not good for in safety-critical work; Introduction |
+| Barry / Calista | **Reassigned** — own the follow-up study: protocol, IRB, recruitment, device logistics (`STUDY_PROTOCOL.md` §"Open questions") |
+| All | Review, pre-registration sign-off |
 
-Occupational health (NIOSH), military human performance (ARL/DEVCOM), UN
-disaster agencies. All of these want the H2 forward-simulation claim, not a
-classifier. Design for it from day one.
+Rule retained from the original plan: every author owns a figure, a table,
+or a named deliverable.
 
-## 9. Open decisions for the group
+## 6. Venues (revised)
 
-1. Outcome variable: reaction time, error rate, or self-reported stress?
-   (Self-report is weakest; reviewers will push back.)
-2. Are we collecting new data, or purely secondary analysis?
-3. Is the biomarker layer in scope for paper 1, or paper 2?
-4. Who is corresponding author?
+Paper 1 is a methods-and-negative-results contribution, not a performance
+monitor. Ordered by fit:
+
+1. *Sensors* — good home for wearable methodology plus honest nulls
+2. *IEEE JBHI* — as a short methods note
+3. *PLOS One* — sound-science venue, no novelty bar
+4. *Behavior Research Methods* — if the artifact findings lead
+
+Dropped: *npj Digital Medicine* (required the biomarker layer);
+*IEEE THMS* (required the H2 policy layer).
+
+## 7. Open decisions for the group
+
+1. Publish the state-detection result now as a standalone short paper, or
+   hold it for a combined submission with the follow-up? (Recommendation:
+   publish now — it stands alone and is not contingent.)
+2. Is a course available to host the follow-up? **This is the binding
+   constraint on H1b, not analysis.**
+3. IRB lead time at Kumoh, and device availability for 25 participants.
+4. Confirm the role reassignment in §5.
+
+## 8. What is already reproducible
+
+    python -m src.data.exam_stress        # exam feature table
+    python -m src.data.exam_state         # duration-matched windows
+    python -m src.data.nurse              # nurse feature table
+    python -m src.eval.make_figures       # Figs 1-2
+    python -m src.eval.make_figures_nurse # Fig 3
+    python -m src.eval.make_figures_state # Fig 4
