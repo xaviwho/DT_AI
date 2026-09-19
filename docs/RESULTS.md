@@ -230,3 +230,80 @@ be scientifically meaningful, is below this design's detection floor.
 This is a credible negative-results and methods contribution. It is not
 evidence for a deployable stress-or-performance monitor, and must not be
 written up as one.
+
+---
+
+# Results — State detection (the positive result)
+
+Reproduce with:
+
+    python -m src.data.exam_state       # duration-matched windows
+    python -m src.eval.make_figures_state
+
+## Correction to Result 1
+
+Result 1 compared the whole pre-exam baseline (41–65 min) against the whole
+exam window (90–180 min). Those windows differ in length by 2–4x, and
+**tonic EDA drifts upward over a recording** as the skin under the
+electrode occludes and hydrates. Re-running the contrast on
+**duration-matched 35-minute windows** anchored on exam onset:
+
+| Feature | Unmatched dz | Matched dz | Verdict |
+|---|---|---|---|
+| EDA tonic | +0.40 (p=.035) | +0.13 (p=.49) | **artifact** |
+| SCR rate | +0.47 (p=.016) | +0.15 (p=.41) | **artifact** |
+| Heart rate | −1.58 (p<.0001) | −1.25 (p<.0001) | robust |
+| Activity counts | −0.60 (p=.003) | −0.59 (p=.003) | robust |
+| HRV RMSSD | +0.58 (p=.003) | +0.46 (p=.023) | robust |
+
+**The EDA increase reported in Result 1 was an artifact of window length,
+not sympathetic arousal.** The earlier interpretation — "EDA carries the
+genuine arousal signal, cardiac features track movement" — was wrong and is
+withdrawn. The cardiac and motor effects are the robust ones.
+
+Crucially this does **not** overturn Result 2: the EDA *reactivity ->
+performance* correlation survives matching and slightly strengthens
+(SCR rate ρ = −0.441, p = .015, vs −0.397 unmatched; Holm-adjusted
+p = .074). A drifting mean and a between-session correlation are different
+quantities. Result 2 stands as "suggestive, not corrected-significant".
+
+## The positive result: state detection works
+
+Classifying each duration-matched 35-min window as exam or baseline,
+leave-one-subject-out, 60 windows from 10 subjects:
+
+| Specification | AUROC | 95% CI | Permutation p |
+|---|---|---|---|
+| **All 5 features** | **0.933** | [0.885, 0.973] | **.002** |
+| EDA only | 0.398 | [0.211, 0.596] | .786 |
+| EDA, activity-adjusted | 0.626 | [0.436, 0.756] | .092 |
+
+**AUROC 0.93 with a tight CI and p = .002 is a deployable-grade effect.**
+Wrist physiology identifies high-demand task episodes reliably, across
+held-out subjects, with duration and onset-time controlled.
+
+### What the specification ladder rules in and out
+
+- EDA alone is **at chance** (0.398). Combined with the matching result
+  above, electrodermal activity carries essentially no exam-vs-baseline
+  information here.
+- Activity-adjusted EDA reaches 0.626 but its CI spans 0.5 (p = .092).
+  Not established.
+- So the signal is **cardiac and motor**. The honest description of the
+  capability is detection of a *seated, sustained-attention episode* versus
+  an *ambulatory pre-task period* — posture and activity are part of what
+  is being detected, not nuisance to be explained away.
+
+That is still a real and useful capability — it is how a field monitor
+would segment a shift into task episodes — but it must not be described
+as "stress detection".
+
+## Revised summary across all analyses
+
+| Claim | Status |
+|---|---|
+| Wrist physiology detects high-demand task episodes | **Supported**, AUROC 0.93, p=.002 |
+| The detector is arousal-based rather than posture-based | **Not supported** (EDA at chance) |
+| EDA reactivity tracks within-subject performance | **Suggestive**, ρ=−0.44 p=.015, Holm p=.074 |
+| Physiology predicts performance (multivariate, out-of-subject) | **Not supported**, R² < 0 |
+| Physiology discriminates self-reported stress (nurses) | **Not supported**, AUROC 0.544 |
