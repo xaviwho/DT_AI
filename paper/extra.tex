@@ -1,0 +1,15 @@
+The key evaluation metrics include:
+\begin{itemize}
+\item \textbf{Average Trust Score ()}: Mean trust value across all vehicles.
+\item \textbf{Trust Convergence Time}: Time required for honest vehicles to reach stable high trust.
+\item \textbf{Trust Volatility}: Standard deviation of trust scores over time.
+\item \textbf{Relay Selection Fairness}: Measured using Jain's fairness index.
+\item \textbf{Successful Delivery Rate (SDR)}: Proportion of messages successfully delivered to isolated vehicles.
+\item \textbf{Energy Consumption per Vehicle}: Aggregate energy cost incurred by relays.
+\item \textbf{Relay Reuse Ratio}: Frequency of repeated selection of the same relay.
+\item \textbf{Gas Cost per Trust Update}: Blockchain gas cost incurred for each trust submission.
+\item \textbf{PoD Forgery Rejection Rate}: Effectiveness of PoD verification under forged input.
+\item \textbf{Trust Query Latency}: Time to retrieve trust scores using on-chain getTau(...).
+\end{itemize}
+
+Each metric is logged per round and exported to CSV for visualization. Plots include trust score trajectories, relay timeline charts, and blockchain gas usage histograms. This setup validates the system's efficiency, resilience, and practical feasibility under realistic V2X assumptions.

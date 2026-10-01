@@ -1,0 +1,1003 @@
+\cite{cho2010survey}\documentclass[journal,comsoc,twoside]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+%\usepackage{algorithmic}
+% \usepackage{amsmath, amssymb}
+\usepackage{amsthm}
+\usepackage{amsthm}
+\newtheorem{corollary}{Corollary}
+\newtheorem{theorem}{Theorem}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{multirow}
+\usepackage[hidelinks]{hyperref}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{pifont}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{orcidlink}
+\usepackage{setspace}
+\usepackage{balance}
+\usepackage{array}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\usetikzlibrary{positioning}
+\usetikzlibrary{positioning,arrows.meta}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+
+\title{Physiological state detection in high-demand work}
+
+
+\author{\IEEEauthorblockN{Hope Leticia Nakayiza\orcidlink{https://orcid.org/0009-0001-0570-845X}, \textit{Member, IEEE}, Love Allen Chijioke Ahakonye\orcidlink{0000-0003-2840-1693}, \textit{Member, IEEE}, \\ Dong-Seong Kim, \orcidlink{0000-0002-2977-5964}, \textit{Senior Member, IEEE}, \textit{Member, IEEE}, Jae Min Lee\orcidlink{0000-0001-6885-5185}, \textit{Member, IEEE}}
+    
+\thanks{Manuscript received Month XX, 2026; revised Month XX, 2026; accepted Month XX, 2026.}
+\thanks{This work was partly supported by the Innovative Human Resource Development for Local Intellectualization program through the Institute of IITP grant funded by the Korea government (MSIT) (IITP-2026-RS-2020-II201612, 25\%), the Priority Research Centers Program through the NRF funded by the MEST (2018R1A6A1A03024003, 25\%), and by the MSIT, Korea, under the ITRC support program (IITP-2026-RS-2024-00438430, 25\%), and the Gyeongsangbuk-do RISE (Regional Innovation System \& Education) project (Regional Growth Innovation LAB unit), 25\%.}%
+
+\thanks{(Corresponding author: Jae Min Lee.)}
+\thanks{H. L. Nakayiza, J.-M. Lee, and D.-S. Kim is with the Department of IT Convergence Engineering and NSLab Co. Ltd., Kumoh National Institute of Technology, Gumi 39177, South Korea (e-mail: {hopeleticia, dskim, ljmpaul}@kumoh.ac.kr).}%
+\thanks{L. A. C. Ahakonye is with the ICT Convergence Research Center, Kumoh National Institute of Technology, Gumi 39177, South Korea (e-mail: loveahakonye@kumoh.ac.kr).}%
+}
+
+\markboth{IEEE Internet of Things Journal,~Vol.~XX, No.~XX, Month~2026}
+{H. L. Nakayiza \MakeLowercase{\textit{et al.}}: A Soulbound Token-Based Blockchain Framework for Incentive-Driven Trust Management in V2X Networks}
+
+\begin{document}
+\maketitle
+
+
+
+\begin{abstract}
+
+
+Ensuring reliable trust management in Vehicle-to-Everything (V2X) networks is challenging due to the presence of malicious behavior and identity spoofing. This paper proposes PureTrust, a blockchain-enabled trust management framework that integrates PureSBT, a soulbound token-based incentive mechanism, for secure and non-transferable reputation tracking. PureTrust employs a hybrid trust computation model combining Bayesian estimation, cooperation decay, malicious behavior penalties, and temporal trust aging to generate adaptive trust scores. Built on PureChain with the proof of authority and association consensus, and IPFS-based storage, the framework ensures scalability, transparency, and low on-chain overhead.
+\textcolor{black}{Simulation results demonstrate that PureTrust achieves consistently high detection accuracy, maintains approximately 80\% successful message delivery, and provides significantly higher throughput with a low average latency of $1.54$ seconds compared to existing public and private blockchain networks.} By securely binding reputation to vehicle identities via non-transferable SBTs and enabling issuer-controlled revocation, PureTrust incentivizes cooperation while effectively mitigating trust manipulation and reputation laundering-related risks.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Blockchain, Soulbound Tokens, Reputation Management, Incentive Mechanism, Vehicle-to-Everything (V2X)
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{int}
+
+Modern vehicular networks as part of the internet of vehicles (IoV) ecosystem form the foundation of connected and autonomous transportation, where timely message delivery, data integrity, and mutual trust between vehicles are crucial.~\cite{sehar}. Through vehicle-to-everything (V2X) communication as depicted in Figure~\ref{vx}, vehicles can communicate with other vehicles, roadside infrastructure, and mobile devices for real-time network updates~\cite{MENDES}. Vehicles, roadside units, and edge/cloud infrastructures now exchange massive volumes of data to enable real-time decision-making, collision avoidance, platooning, and cooperative perception~\cite{Leticia}. 
+
+Such communication is made possible by V2X protocols, such as Cellular V2X (C-V2X) and Dedicated Short-Range Communication (DSRC), which ensure high-speed, reliable data exchange between components~\cite{Baofeng}. The dynamic, high-interconnectivity of V2X networks introduces vulnerabilities to malicious behavior~\cite{hbaieb}. Malicious vehicles may inject false messages, perform Sybil attacks, or behave selfishly by refusing to relay critical information, leading to misinformed decisions and potential accidents~\cite{Nakayiza}. Traditional security techniques address external attackers but are less effective against insider threats where authenticated vehicles behave dishonestly~\cite{ruan}. This has motivated extensive research into trust and reputation mechanisms to promote honest and cooperative behavior.
+
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Images/V2X-compressed.jpg} 
+        \caption{V2X Architecture}
+    \label{vx}
+\end{figure}
+
+Trust and reputation management systems (TRMS) have emerged as crucial mechanisms for enforcing accountability and encouraging cooperative behavior in decentralized vehicular environments~\cite{lu2018}. Each vehicle continuously evaluates the trustworthiness of information and the credibility of other vehicles~\cite{siddiqui}. By maintaining reputations or trust scores, the network can identify and mitigate misbehaving nodes, thus ensuring more reliable data exchange. However, existing TRMS suffer from several limitations. They often rely on static thresholds that do not adapt to context changes and can be evaded by sophisticated attackers, leading to false classifications.  
+
+Incentive mechanisms have been introduced in V2X networks to encourage trustworthy behavior. In the absence of incentives, vehicles have little motivation to expend resources for the benefit of others~\cite{sultan}, especially if the network is open and participants are anonymous. Various studies have explored fungible and non-fungible tokens (NFTs) as entity credentials to verify ownership and record trust scores or reputations across multiple networks, guaranteeing immutability and transparency~\cite{ahmed}. However, these token-based and transferable incentives are vulnerable to collusion and identity spoofing.
+
+Soulbound tokens (SBTs), initially proposed by Vitalik Buterin et al.~\cite{Buterin}, offer a promising foundation for decentralized, non-transferable, and identity-bound reputation management. Unlike conventional fungible tokens, SBTs are permanently bound to the user and cannot be traded or transferred~\cite{shashidhara}, thereby reducing the risk of reputation laundering or token farming. Although SBTs have been explored in various sectors such as social governance~\cite{ichihara}, health~\cite{Lunesu}, and digital credential management~\cite{pericas}, their integration into V2X trust architectures remains underexplored. SBTs can contribute to V2X networks by aligning individual vehicle behavior with the network’s reliability goals, converting otherwise selfish nodes into cooperative participants over time as they build their reputations.
+
+Blockchain has been leveraged within existing trust management models to encourage trustworthy participation among vehicles, thanks to its decentralized auditability and transparency~\cite{sehar}. Public blockchain networks, such as Ethereum, and private permissioned networks, such as Hyperledger Fabric, have been considered for various V2X implementations. Consensus mechanisms such as proof-of-stake (PoS) and delegated PoS improve efficiency, but face centralization risks as large stakeholders dominate block creation~\cite{hussein}. In permissioned networks, proof-of-authority (PoA) consensus is often used where a fixed set of trusted validators take turns producing blocks. PoA delivers high transaction throughput, but its round-robin model inherently centralizes trust in a few identities, creating a single point of failure~\cite{chen}. Therefore, a consensus mechanism that ensures reliability and seamless blockchain integration with built-in redundancy to account for validator inactivity is crucial for V2X networks~\cite{HopeJournal}. \textcolor{black}{Recent work~\cite{awan2025qstmf} has explored quantum-secured trust frameworks that integrate quantum key distribution with blockchain to strengthen VANET communication security. This highlights the growing interest in advanced cryptographic defenses for future trust management in V2X systems.}
+
+To address these limitations, we propose PureSBT, a blockchain-enabled, incentive-aware trust management framework specifically designed for cellular V2X networks, which addresses the challenges associated with traditional verification and reputation management methods for V2X networks. Our contributions are summarized as follows:
+\begin{enumerate}
+    \item A novel hybrid trust model that integrates Bayesian trust estimation, cooperation decay, malicious activity penalties, and age-based trust decay to generate a comprehensive and interpretable trust score.
+    \item We design PureSBT, a blockchain-based reputation framework that utilizes SBTs as non-transferable, incentive-compatible reputation assets in vehicular networks, compliant with ERC-721 and ERC-5484 standards, and bound to the vehicle's identity.
+    \item  Risk-aware Relay Selection that incorporates trust scores, link quality, energy constraints, and real-time risk assessment for optimal message forwarding.
+    \item Integration of a custom blockchain network, PureChain, with IPFS for efficient SBT metadata storage and retrieval.
+
+\end{enumerate}
+
+\begin{table*}[htpb]
+\centering
+\caption{Comparison of Existing State-of-the-art  Trust Management Frameworks with Proposed PureTrust}
+\label{related}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|C{2cm}|C{5.6cm}|C{4.4cm}|C{2.4cm}|C{1.8cm}|C{2cm}|C{2.5cm}|}
+% \begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Study\end{tabular}} & \textbf{Trust Model} & \textbf{\begin{tabular}[c]{@{}c@{}}Incentive\\ Mechanism\end{tabular}} & \textbf{Transferability} & \textbf{\begin{tabular}[c]{@{}c@{}}Blockchain\\ Integration\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Decentralized \\ Storage\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Consensus\\ Mechanism\end{tabular}} \\ \hline
+\begin{tabular}[c]{@{}c@{}}Xiao et al.~\cite{Xiao}\\ (2019)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Bayesian inference from \\ interaction history combined\\  with rank-based global trust scoring\end{tabular} & \begin{tabular}[c]{@{}c@{}}Trust Credit\end{tabular} & Transferable & No & No & N/A \\ \hline
+\begin{tabular}[c]{@{}c@{}}~\cite{Liang} (2020)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Reinforcement learning-based \\ vehicle trust estimation \\ updated through learning episodes\end{tabular} & No explicit incentive model & N/A & Yes & No & DPoS \\ \hline
+\begin{tabular}[c]{@{}c@{}}Sultan\\ et al.~\cite{sultan}\\ (2021)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Trust derived from data forwarding\\  consistency and misbehavior\\  monitoring\end{tabular} & \begin{tabular}[c]{@{}c@{}}Credit reward \\ scheme encouraging\\  positive behavior\end{tabular} & Transferable & No & No & N/A \\ \hline
+\begin{tabular}[c]{@{}c@{}}Ahmed\\et al.~\cite{ahmed}\\(2022)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Threshold trust score\\  derived from event validations\\  and feedback with cryptographic \\ ring signatures\end{tabular} & \begin{tabular}[c]{@{}c@{}}Token rewards issued for \\ validated traffic events\end{tabular} & Transferable & Yes & No & PBFT \\ \hline
+\begin{tabular}[c]{@{}c@{}}Ruan et al.~\cite{ruan}\\ (2023)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Multi-layer hierarchical trust\\  evaluation using peer feedback\\  and RSU confirmation\end{tabular} & \begin{tabular}[c]{@{}c@{}}Not Implemented\end{tabular} & N/A & Yes & No & Ouroboros (based on PoW) \\ \hline
+\begin{tabular}[c]{@{}c@{}}Wang et al~\cite{wang}\\ (2023)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Interaction-based trust stored \\ on blockchain\end{tabular} & \begin{tabular}[c]{@{}c@{}}Implicit via\\  Trust Updates\end{tabular} & Transferable & Yes & No & Proof of Trust (PoT) \\ \hline
+\begin{tabular}[c]{@{}c@{}}Mohammad\\ et al.~\cite{Mohammad}\\ (2024)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Fuzzy rule-based logic \\ for individual vehicle behavior and\\  experience-based trust updates\end{tabular} & \begin{tabular}[c]{@{}c@{}}Market Value Ratings\end{tabular} & Transferable & No & No & N/A \\ \hline
+\begin{tabular}[c]{@{}c@{}}Han et al.~\cite{han}\\ (2024)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Multi-factor trust with \\ location, content, \\ and feedback attributes\end{tabular} & \begin{tabular}[c]{@{}c@{}}Game-theoretic \\ credit-based token \\ rewards for data sharing\end{tabular} & Transferable & Yes & No & Not Specified \\ \hline
+\begin{tabular}[c]{@{}c@{}}Saleh\\et al.~\cite{Saleh} \\(2024)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Trust computation based \\ on forwarding performance \\ and contextual observations\end{tabular} & \begin{tabular}[c]{@{}c@{}}Indirect incentive via \\ priority access and \\ resource allocation\end{tabular} & N/A & Yes & No & Not Specified \\ \hline
+\begin{tabular}[c]{@{}c@{}}Xu et al.~\cite{xu}\\ (2025)\end{tabular} & \begin{tabular}[c]{@{}c@{}}Rule-based behavior\\  monitoring with threshold\\  triggers for misbehavior flags\end{tabular} & No incentive mechanism & N/A & No & No & N/A \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}This Study\\ PureTrust \\ (2025)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Hybrid trust fusion combining \\ Bayesian core trust, \\ behavioral cooperation decay, \\ volatility tracking,\\  maliciousness detection, \\ and PoD-based verifiability\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Soulbound\\ Tokens for consistent\\ cooperative behavior\end{tabular}} & \textbf{Non-transferable} & \textbf{Yes} & \textbf{Yes (IPFS)} & \textbf{\begin{tabular}[c]{@{}c@{}}Proof of authority\\  and association\\ (PoA$^2$)\end{tabular}} \\ \hline
+\end{tabular}}
+
+\end{table*}
+
+\section{Background Study and Related Works}
+This section reviews related works on trust and reputation management, incentive mechanisms, and blockchain integration for vehicle networks.
+
+\subsection{Trust Management in Vehicle Networks}
+ 
+\textcolor{black}{Kamran et al.~\cite{awan2021vtrust} introduced a trust-based wireless energy-sharing mechanism for VANETs that computes trust from ability, benevolence, and integrity parameters using RSUs as centralized authorities. While effective for detecting malicious energy-sharing behavior, this centralized design may suffer from a single point of failure and lacks the transparency and tamper-resistance needed for large-scale VANET scenarios.}
+To mitigate the uncertainty in trust evaluation within IoT-ad hoc network-based applications, Baharloo et al.~\cite{baharloo} proposed a three-value trust model to reason about commitments. However, the study lacks a practical incentive scheme and real-time deployability.
+\textcolor{black}{
+Rehman et al.~\cite{Rehman} leveraged federated learning to introduce dynamic trust-based aggregation and governance-aware auditing for resilient edge decision-making under heterogeneous and resource-constrained IoT conditions. However, the framework does not provide incentive-aligned reputation persistence, meaning honest devices receive no long-term reward for their performance or sustained security compliance. Moreover, while the authors incorporate a blockchain-based audit trail for immutable logging, the work does not specify any underlying blockchain network or consensus protocol, leaving the auditing layer without clearly defined decentralization guarantees or adversarial robustness.}
+Xu et al.~\cite{xu} proposed a hybrid trust model using dynamic clustering and hypergraph-based mining to compute multi-layered trust values from direct observations and neighbor recommendations across hierarchical network layers. However, their approach lacks incentive mechanisms to encourage honest participation, making it vulnerable to strategic manipulation by malicious nodes who can exploit the passive trust system without penalties. \textcolor{black}{The study by Awan et al.~\cite{stacktrust} leverages ensemble learning with adaptive weighting and logarithmic historical trust modeling to stabilize trust estimation in dynamic IoT environments. While effective for trust classification, the study focuses solely on prediction accuracy and does not incorporate incentive mechanisms or tamper-resistant trust management.}
+Xiao et al.~\cite{Xiao} proposed a trust model for vehicular ad-hoc networks based on Bayesian statistics and link analysis to distinguish malicious nodes. However, the study remains purely algorithmic, without integration of blockchain or incentive mechanisms. 
+To improve vehicle mobility handling, resilience to disinformation, and enhance privacy, Lygizou et al.~\cite{lygizou} introduced the create assemblies model, where trustees evaluate their capabilities and locally store trust information, thereby reducing communication overhead.
+Al-Shamaileh et al.~\cite{Mohammad} introduced a vehicle-based decision-making framework that evaluates service providers in IoT environments using multi-context trust attributes. While efficient in provider selection, it does not address token-based incentives, on-chain verification, or offline operability. 
+Saleh et al.~\cite{Saleh} proposed a trust-aware relay selection scheme integrating direct and indirect observations using Bayesian inference and Dempster-Shafer theory, coupled with an auction-based incentive mechanism for vehicular content relaying. However, their centralized approach, through base station controllers, creates scalability issues and single points of failure, while requiring continuous direct interactions, which limits effectiveness in sparse network scenarios with limited interaction history.
+
+\subsection{Blockchain-Based Trust Management}
+Trust is a persistent challenge in distributed systems where participants interact without prior history. Conventional models such as reputation systems, certificate authorities, or central brokers are prone to manipulation, opacity, and single points of failure. Blockchain provides a compelling alternative with a decentralized, tamper-resistant, and auditable record of interactions~\cite{ahakonye2024tides}.
+
+Sehar et al.~\cite{sehar} proposed a blockchain-based scheme to secure V2V communications, using a consortium blockchain to record and verify messages without a single point of failure. 
+Wang et al.~\cite{wang} proposed a blockchain-empowered trust management framework that implements global trust aggregation and a proof-of-trust (PoT) consensus to ensure the integrity of trust updates in the Internet of Battlefield Nodes under various attack models of malicious nodes. However, the model lacks a real-time incentive mechanism and suffers from high latency due to consensus delays. Liang et al.~\cite{Liang} proposed a blockchain-based trust mechanism that combines reinforcement learning for CPU allocation with a hybrid PoW/PoS consensus to incentivize honest behavior, where edge devices are rewarded based on their service reputations stored on the blockchain. However, their approach suffers from high computational complexity and energy-intensive consensus mechanisms, while trust evaluation is limited to computational performance metrics rather than comprehensive behavioral assessment. Ruan et al.~\cite{ruan} proposed a double-layer blockchain architecture for trust management to reduce overhead on resource-constrained vehicles in IoV, leveraging logistic regression on multiple trust components to decentralize decision-making while filtering over 90\% of malicious nodes.
+
+\subsection{Incentive-Centric Trust and Reputation Mechanisms}
+Han et al.~\cite{han} proposed a reputation-based reward and punishment scheme that combines trust evaluation with a repeated game-theoretic incentive mechanism, where vehicles' reputation values determine message credibility, and a blockchain-based distributed system ensures consistent trust management storage across roadside units. Feng et al.~\cite{feng}proposed a game-theoretic trust system using virtual payments to incentivize honest message forwarding. It relies on centralized control, limiting its applicability in dynamic vehicular environments. Ahmed et al.~\cite{ahmed} presented a blockchain-enabled trust management scheme with consortium blockchain validation. Still, their tradable incentives cannot maintain original ownership credentials, and the approach suffers from computational overhead and scalability issues due to the complexity of reputation calculations and consensus mechanisms. Pirani et al.~\cite{cacopardo} explored the use of both fungible and non-fungible tokens for reputation in sustainable supply chains. 
+Sultan et al.~\cite{sultan} proposed a credit-based incentive scheme for cooperative VANETs, where vehicles earn and spend credits based on their participation in forwarding messages. Although the model integrates misbehavior detection and economic motivation, the use of transferable tokens introduces risks of collusion and identity spoofing in VANETs. 
+
+\subsection{Applications of Soulbound Tokens}
+The use of SBTs ensures that reputation gains are bound to the user’s identity, thereby preventing abuse or sale of reputation. 
+Tumati et al.~\cite{tumati} introduced an SBT-based certificate verification system to counter fake credentials, demonstrating the effectiveness of SBTs in preventing unauthorized transfer of achievements or qualifications. 
+To create a decentralized mutual authentication framework for content-centric networking, Shashidhara et al.~\cite{shashidhara} leveraged blockchain-based SBTs to ensure proof-of-authenticity and ownership. 
+Pericas et al.~\cite{pericas} combined the use of SBTs with credential management systems, enabling the association of terms and conditions during issuance and providing users with non-repudiation of reception evidence upon acceptance. Table~\ref{related} summarizes state-of-the-art trust management frameworks and compares their approaches with the proposed PureSBT.
+
+To the best of our knowledge, this study is the first to utilize Soulbound Tokens (SBTs) as an incentive mechanism for V2X trust management, addressing the critical gap in non-transferable incentives that ensures consistent vehicle identity tracking and behavioral accountability. Unlike existing transferable reward systems that are vulnerable to token trading and identity spoofing, our SBT-based approach provides immutable reputation binding to specific vehicles, effectively mitigating Sybil attacks where malicious entities impersonate legitimate vehicles. This work establishes a novel framework that combines blockchain-based auditability with scalable trust modeling, ensuring verifiable behavior tracking while maintaining computational efficiency for dynamic vehicular environments. 
+
+\section{System Architecture and Methodology}
+\label{sysm}
+
+\subsection{System Overview}
+Figure~\ref{model} illustrates our proposed framework to establish reoutation management through SBT incentives.
+
+\begin{figure*}[!htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/architecture.png} 
+        \caption{Proposed PureSBT System Architecture for Reputation Management in V2X Networks}
+    \label{model}
+\end{figure*}
+Our system consists of the following core components:
+\begin{enumerate}
+    \item Vehicle: Participates in cooperative behavior such as packet forwarding and misbehavior detection, and holds an SBT wallet where the SBT is stored.
+    \textcolor{black}{\item Edge Coordinator (EC): An authority role fulfilled by Roadside Units (RSUs) within a permissioned cluster. The EC is responsible for evaluating vehicle behavior against predefined eligibility criteria. To prevent a single point of failure, a quorum of RSU validators verifies and signs trust-related transactions. This ensures that a single compromised or failing RSU cannot unilaterally manipulate the reputation state or issue unauthorized tokens.}
+    \item InterPlanetary File System (IPFS) Storage Module: Handles decentralized SBT metadata storage, uploading detailed vehicle performance records to IPFS, and returning content identifiers (CIDs) for blockchain anchoring.
+    % \item Smart Contract Minter: Deploys ERC-5484 compliant SBTs using recipient addresses and metadata URIs, ensuring non-transferable properties through contract-level enforcement.
+    \item Blockchain: Custom blockchain on which the ERC-721 and ERC-5484 compliant smart contract is deployed. It also stores IPFS hashes and maintains transparent transaction records.
+\end{enumerate}
+
+
+\subsection{Threat Model}
+The system monitors vehicle behavior in real-time to identify diverse attack strategies aimed at undermining trust and cooperation. We simulate the various malicious patterns to evaluate system resilience. A fraction of vehicles are set as malicious based on malicious ratios $20\%$, $40\%$, $60\%$, and $80\%$. The distribution of malicious patterns across the network, with an increase in the malicious ratio, is shown in Figure~\ref{distribution}.
+
+\textcolor{black}{
+\subsubsection{Selfish Attack}
+Selfish nodes exploit network resources while refusing to forward packets, thereby conserving their own energy or bandwidth~\cite{fayaz}. This behavior disrupts cooperation and significantly reduces the overall packet delivery rate.}
+\textcolor{black}{
+\subsubsection{Sybil Attack}
+A Sybil attacker assumes multiple spoofed identities to broadcast fabricated messages~\cite{alalwany}. This creates a false perception of traffic conditions, leading to distorted trust-based decisions and potential denial of service.}
+\textcolor{black}{
+\subsubsection{Man-in-the-Middle (MITM) Attack}
+In an MITM attack, an adversary intercepts and alters communication between vehicles without detection~\cite{alalwany}. This compromises both data authenticity and the integrity of safety-critical information.}
+\textcolor{black}{
+\subsubsection{Black Hole Attack}
+A black hole node advertises itself as having the optimal route but drops all incoming packets~\cite{alalwany}. This halts communication on targeted paths, resulting in localized denial-of-service.}
+\textcolor{black}{
+\subsubsection{Falsifier Attack} 
+In this integrity attack, a vehicle injects false or altered data into the network~\cite{aslan}. The adversary misleads neighboring vehicles by modifying location, speed, or event data, degrading the reliability of cooperative perception.}
+\textcolor{black}{
+\subsubsection{Gray Hole Attack} 
+A gray hole attacker selectively drops safety-critical or high-value packets while forwarding others~\cite{khodjamov}. This intermittent behavior reduces reliability and is more difficult to detect than total packet dropping. }
+\textcolor{black}{
+\subsubsection{Strategic Attack (On-off Misbehavior)}
+Strategic attackers alternate between honest and malicious phases to maintain a baseline trust score~\cite{razafimanjato}. By attacking intermittently, they try to evade reputation-based penalties while still compromising network performance.}
+
+Malicious vehicles are penalized through immediate degradation of their trust and reputation. Benign vehicles forward messages only if peer trust exceeds a threshold; otherwise, they abstain to preserve network integrity.
+
+\subsection{Vehicle Cooperative Behavior}
+Vehicles collaborate in cooperative packet forwarding across the network to build their reputation. Each participating vehicle monitors its interactions with message forwarding. Whenever a vehicle acts as a relay for a message, the outcome (success or failure) is logged by neighboring nodes or RSUs. For example, if vehicle $A$ forwards a message to $B$, but $B$ (or an RSU) never receives it, this is recorded as a failed delivery for $A$. The EC aggregates these observations to build an interaction history for each vehicle.
+
+\subsubsection{Proof of Delivery (PoD) Generation}
+Each vehicle $i$ possesses a unique blockchain address and continuously monitors its local performance. It periodically generates a PoD report containing the number of delivery or cooperation attempts made, the successful delivery rate (SDR), and the risk flag, where $R_i = 0$ denotes an entirely benign vehicle, and values approaching 1 indicate increasingly risky or malicious behavior.
+
+These PoD records are uploaded to IPFS for decentralized storage. The resulting content hashes are committed to a public blockchain to ensure tamper-resistance and integrity.
+
+\subsubsection{PoD Validation}
+Upon each message forwarding event, a vehicle submits its PoD to the Edge Coordinator (EC). The EC verifies the PoD’s authenticity and assesses the likelihood of success in updating the vehicle's trust. The delivery success probability is defined in Equation~\ref{pod}.
+\begin{equation}
+P_{\text{success}} = 
+\begin{cases}
+0.9 \cdot LQ & \text{if vehicle is benign} \\
+f(E, R, T) & \text{if vehicle is flagged malicious},
+\end{cases}
+\label{pod}
+\end{equation}
+where $LQ$ represent the link quality coefficient, $E$ is the remaining energy,
+$R$ is the risk score (derived from accumulated misbehavior), and $T$ is the current trust score.
+
+
+For vehicles with a suspicious history, the likelihood of success is dynamically modulated in Equation~\ref{mal_eqn}.
+\begin{equation}
+f(E, R, T) = 0.4 \cdot \left( \frac{E}{E_{\text{max}}} \right) \cdot (1 - R) \cdot T. 
+\label{mal_eqn}
+\end{equation}
+This penalizes vehicles with low energy, high risk, or low trust, thereby discouraging selfish or adversarial behavior. It allows the trust manager to differentiate between honest degradation and intentional disruption.
+
+\subsection{Misbehavior Detection}
+The misbehavior detection module analyzes the interaction history to identify suspicious patterns that indicate malicious behavior by a relay vehicle.
+The malicious pattern distribution considered in this study is shown in Figure~\ref{distribution}.
+\begin{figure}[!htbp]
+   \centering   \includegraphics[width=0.45 \textwidth]{Images/malicious_distribution.png}
+   \caption{Malicious Pattern Distribution Under Increasing Malicious Ratio}
+   \label{distribution}
+\end{figure}
+
+When a potentially malicious pattern is found, the detector outputs a behavior alert with a confidence level and severity score. The severity can be quantified on a scale of 1 to 10 based on how deviant the behavior is from normal. A high-severity alert triggers an immediate trust penalty for the vehicle and sets a risk flag $R_i=1$ for that vehicle, marking it as suspicious.
+
+Algorithm~\ref{malicious} outlines this detection process.
+\begin{algorithm}[!htbp]
+\caption{Malicious Behavior Detection for Vehicle $i$}
+\label{malicious}
+\begin{algorithmic}[1]
+\Require Interaction history $H_i$ of vehicle $i$ in last $T$ (time window)
+\Require Current trust score $\tau_i$ and recent trust trajectory
+\State $R_i \gets 0$ \Comment{Initialize risk flag as not malicious}
+\State Compute $p \gets$ recent packet success rate of $i$ over $H_i$
+\State Compute $\Delta \tau \gets$ recent drop in trust (fractional)
+\If{$p < p_{\min}$ \textbf{or} $\Delta \tau > \Delta_{\max}$} 
+    \State $R_i \gets 1$ \Comment{Flag vehicle as malicious}
+    \State $\textit{severity} \gets$ determine severity based on $p,\Delta \tau$ 
+    \State $\textit{maliciousScore}_i \mathrel{+}= 10 \times \textit{severity}$ 
+    \State $\tau_i \gets \max(0,\; \tau_i - 50 \times \textit{severity})$  \Comment{penalize trust}
+    \If{$\textit{maliciousScore}_i > M_{\text{revoke}}$} 
+       \State revoke SBT of vehicle $i$ (if issued) \label{alg1:revoke}
+    \EndIf
+    \State \textbf{output:} Malicious pattern detected (type, severity)
+\Else
+    \State \textbf{output:} No malicious behavior detected in window
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+$p_{\min}$ is the minimum acceptable delivery success ratio (60\%), and $\Delta_{\max}$ is a threshold for abnormal trust drop (30\%). If either condition is violated, the vehicle is flagged and penalized.
+
+The vehicle’s cumulative malicious score $maliciousScore_i$ is incremented, and its trust score $\tau_i$ is reduced in proportion to the severity of misbehavior. If the malicious score exceeds a revocation threshold $M_{\text{revoke}}$, the framework triggers SBT revocation for that vehicle, effectively voiding their reputation incentive token due to uncooperative behavior.
+
+\subsection{Trust Initialization and Computation}
+Based on the hybrid trust computational model, the derived composite trust values are normalized to fall from 0 to 1. A trust value closer to 1 indicates a higher level of trustworthiness. In this context, a trust value of 0 signifies complete distrust, while a value of 1 indicates absolute trust. During the initialization phase, vehicle nodes are considered to be in a neutral state, neither thoroughly distrusted nor entirely trusted. Hence, the initial trust value of a vehicle node is set at 0.5 to ensure neutrality.
+
+The $EC$ monitors vehicle behavior and updates trust scores, not only computed based on observed cooperation but also on behavioral consistency, malicious resistance, and temporal relevance. We propose a hybrid trust model that combines the Beta‑Bernoulli Bayesian trust model, with weighted vehicle behavior of cooperation responsiveness, trust volatility, maliciousness, and trust age decay to assess the trustworthiness  of each vehicle $i$ at time $t$ in the network dynamically.
+
+The trust score $\tau_i(t)$ is computed as in Equation~\ref{trust}.
+\begin{align}
+\label{trust}
+\tau_i(t) &= \mathbb{E}[\text{Beta}(\alpha + s_i, \beta + f_i)] + \lambda_1 T_{\text{coop}} \notag \\
+         &\quad + \lambda_2 T_{\text{volatility}} - \lambda_3 T_{\text{malicious}} - \lambda_4 (1 - e^{-\delta \cdot AGE_i}),
+\end{align}
+where: $\alpha$ is the weight for trust, and it multiplies the vehicle’s risk‑adjusted trust adjusted\_trust, favoring reliable relays.
+$\beta$ is the weight for link quality and it multiplies lq (a higher‑is‑better link metric), favoring good radio/route condition. $\mathbb{E}[\text{Beta}(\alpha + s_i, \beta + f_i)]$ represents the expected value of a Beta distribution modeling vehicle $i$'s success ($s_i$) and failure ($f_i$) counts. $T_{\text{coop}}$ is the cooperation responsiveness score. $T_{\text{volatility}}$ penalizes vehicles with highly fluctuating trust. $T_{\text{malicious}}$ quantifies observed malicious activity. $\lambda_1, \lambda_2, \lambda_3, \lambda_4$ are tunable weights and $\delta$ controls the decay aggressiveness.
+
+\subsubsection{Beta‑Bernoulli Bayesian Trust}
+This trust component uses Bayesian estimation to model trust as a probability distribution. As detailed in Equation~\ref{beta}, it incorporates both prior assumptions (\(\alpha, \beta\)) and observed behavior (successes \(s_i\), failures \(f_i\)). It provides robustness against vehicles with limited data by preventing premature judgments and reflecting the uncertainty in the vehicle's behavior profile.
+
+\begin{equation}
+\label{beta}
+T_{\text{core}} = \mathbb{E}[\text{Beta}(\alpha + s_i, \beta + f_i)] = \frac{\alpha + s_i}{\alpha + \beta + s_i + f_i},
+\end{equation}
+with $s_i$ as the number of successful interactions, $f_i$ is the number of failed interactions, and $\alpha$, $\beta$ are prior constants reflecting initial belief.
+
+\subsubsection{Cooperation Responsiveness}
+This quantifies how consistently a vehicle responds to cooperative incentives. As shown in Equation~\ref{cooperation}, it is computed using a temporally-weighted average of past cooperative behaviors, giving more importance to recent actions. This ensures that vehicles that adapt positively to incentives receive higher trust.
+
+\begin{equation}
+\label{cooperation}
+T_{\text{coop}} = \sum_{j=1}^{k} \alpha_j \cdot c_j \quad \text{where} \quad \alpha_j = \frac{e^{-\gamma (t-j)}}{\sum_{r=1}^{k} e^{-\gamma (t-r)}},
+\end{equation}
+where $c_j$ is the cooperation level at time $j$, $\alpha_j$ is the temporal weighting coefficient, and $\gamma$ controls the decay rate of historical influence.
+
+\subsubsection{Trust Volatility}
+This captures the stability of a vehicle’s trust history. High volatility indicates erratic or strategic behavior. Penalizing volatility discourages vehicles from behaving cooperatively only sporadically and encourages sustained trustworthiness, as shown in Equation~\ref{volatility}.
+
+\begin{equation}
+\label{volatility}
+T_{\text{volatility}} = -\frac{1}{n-1} \sum_{j=1}^{n-1} |\tau_i(j+1) - \tau_i(j)|,
+\end{equation}
+where $\tau_i(j)$ is the trust score at time $j$ and $n$ is the total number of observed trust scores.
+
+\subsubsection{Malicious Behavior Score}
+This component reflects the cumulative severity of identified malicious activities, such as tampering and message dropping. It is updated from real-time logs and reflects direct penalties in the trust computation as shown in Equation~\ref{malicious_score}.
+
+\begin{equation}
+\label{malicious_score}
+T_{\text{malicious}} = \textit{maliciousScore}[i],
+\end{equation}
+where $\textit{maliciousScore}[i]$ is a counter incremented upon detection of misbehavior.
+
+\subsubsection{Temporal Inactivity Penalty}
+Trust decays over time when there is no recent interaction observed. This exponential decay ensures outdated trust values are discounted, preventing stale vehicles from retaining undeserved high trust, as shown in Equation~\ref{age}.
+
+\begin{equation}
+\label{age}
+T_{\text{decay}} = 1 - e^{-\delta \cdot AGE_i},
+\end{equation}
+where $AGE_i$ denotes the time since last verified interaction with vehicle $i$ and $\delta$ is a tunable factor controlling the decay aggressiveness.
+
+\subsection{Relay Selection Strategy}
+A relay selection strategy is employed to support vehicles that are unable to establish direct V2V connections due to unfavorable channel conditions or extended communication ranges. The EC evaluates relay candidates based on a scoring function $S$, as computed in Equation~\ref{relay}, which balances trust, energy, connectivity, and risk.
+\begin{equation}
+S = \alpha \cdot \tau_{\text{adj}} + \beta \cdot \text{LQ} - \gamma \cdot \left( \frac{1}{E_k} \right) - \delta \cdot R,
+\label{relay}
+\end{equation}
+where \(\tau_{\text{adj}}\) reflects the adjusted trust score from EC, 
+\(\text{LQ}\) is the link quality (0.5$\sim$1), $\gamma$ is the weight for energy penalty, \(E_k\) reflects the vehicle $k$'s residual energy, and \(R\) is the computed risk score based on detected penalties. The trust score $\tau_i$ influences how other nodes treat vehicle $i$, for example, low-trust vehicles may be avoided as relays, creating a feedback loop that incentivizes good behavior. A benign vehicle will strive to maximize its trust score by diligently forwarding and preventing malicious actions to reap the benefits of a high reputation. Only vehicles with acceptable trust, energy, and risk levels are selected as relays, preventing unreliable or selfish vehicles from dominating communication.
+
+\subsection{Proposed PureSBT Incentive Mechanism}
+\textcolor{black}{
+\subsubsection{Theoretical Justification of Non-Transferable Reputation}
+To establish the mathematical foundation for why SBTs provide superior trust management compared to traditional NFTs in vehicular networks, the identity-behavior binding property is formalized. It proves convergence guarantees under non-transferable reputation systems. This addresses the limitation of potential reputation laundering and token collusion inherent in transferable systems such as those based on NFTs.}
+\begin{itemize}
+    \item \textcolor{black}{Problem: Reputation Transferability Under NFTs:
+    In a system where reputation is stored as a standard NFT (a transferable token), a vehicle $i$ can transfer its high-reputation token $\tau_i$ to a new or malicious vehicle $j$ at time $t$. This action creates a discontinuity where the trust score no longer reflects the true, underlying behavior:}
+    \textcolor{black}{\begin{equation}
+    T_j(t^+) = \mathcal{F}_i(\{B_i(\tau)\}_{\tau=0}^{t}) \neq \mathcal{F}_j(\{B_j(\tau)\}_{\tau=0}^{t})
+    \label{nft_transfer}
+    \end{equation}
+    where $\mathcal{F}$ is the trust computation function, and $\{B_i(\tau)\}$ is the behavioral history of vehicle $i$. Vehicle $j$ now possesses a high trust score ($T_j(t^+)$) derived from $i$'s honest behavior, while its own malicious history ($B_j$) is masked. This establishes a non-injective mapping in the trust space.}
+
+    \item \textcolor{black}{
+    \begin{theorem}[Trust Inconsistency Under NFT:]
+    \label{thm:nft_noninjective}
+    In a transferable reputation system, the network-wide trust vector $\mathbf{T}(t) = [T_1(t), \ldots, T_N(t)]$ does not uniquely and injectively determine the underlying behavioral history $\mathbf{B}(0:t)$.
+    \end{theorem}
+    }
+    \textcolor{black}{
+    \begin{proof}[Proof:]
+    Consider a malicious vehicle $i$ that accumulates a low trust score ($T_i = 0.3$) through dishonest behavior. It then purchases a high-reputation NFT ($\tau_j$) from an honest vehicle $j$ ($T_j = 0.9$), resulting in $T_i(t^+) = 0.9$. Both the honestly-earned trust of 0.9 (reflecting $j$'s history) and the fraudulently purchased trust of 0.9 (reflecting $i$'s current score) appear identical. Since the same trust score value (0.9) can be generated by two different histories (honest accumulation vs. token purchase), the mapping from history ($\mathbf{B}$) to trust ($\mathbf{T}$) is non-injective. This non-injectivity enables reputation laundering and undermines the core assumption of a reliable trust model.
+    \end{proof} }
+
+    \item \textcolor{black}{Solution: Identity-Bound Reputation with SBTs:
+    The fundamental difference of the SBT is its non-transferability, which enforces an injective mapping from behavior to reputation. With SBTs, trust evolves deterministically and exclusively from a vehicle's own historical behavior:}
+    \textcolor{black}{
+    \begin{equation}
+    \label{sbt_injective}
+    T_i(t) = \mathcal{F}_i(\{B_i(\tau)\}_{\tau=0}^{t}) \quad \forall t, \forall i \text{ (non-transferable)}
+    \end{equation}
+    This binding prevents the malicious injection of artificial reputation, ensuring the trust score accurately reflects the vehicle's actual accumulated behavior.}
+
+    \item \textcolor{black}{
+    \begin{theorem}[Trust Convergence Under SBT:]
+    \label{sbt_convergence}
+    Under the non-transferable SBT implementation, for any vehicle $i$ that maintains a consistent behavioral strategy $s_i \in \{\text{Cooperative } (C), \text{ Malicious } (D)\}$, the calculated trust score $T_i(t)$ converges almost surely to a strategy-dependent equilibrium:
+    \begin{equation}
+    \lim_{t \to \infty} T_i(t) = 
+    \begin{cases}
+    T^*_C \in [\epsilon_C, 1.0], & \text{if } s_i = C \text{ (cooperative)} \\
+    T^*_D \in [0.0, \epsilon_D], & \text{if } s_i = D \text{ (malicious)}
+    \end{cases}
+    \end{equation}
+    where $\epsilon_C$ and $\epsilon_D$ are stable thresholds.
+    \end{theorem} }
+    
+    \textcolor{black}{
+    \begin{proof}[Proof:]
+    The proof relies on the stability of the hybrid trust computation model $\mathcal{F}$ used by PureTrust in Equation~\ref{trust}. We can define a Lyapunov function $V_i(t) = |T_i(t) - T^*_{s_i}|^2$ measuring the distance from the equilibrium state. Since the reputation input is only derived from the vehicle's own behavior, for any consistent strategy, the expectation $\mathbb{E}[\Delta V_i(t)] < 0$ for all $t$, guaranteeing convergence with a rate $O(e^{-\gamma t})$.
+    \end{proof}}
+
+    \textcolor{black}{
+    Conversely, under NFTs, malicious vehicles can periodically purchase tokens, inducing non-convergent, periodic oscillations in $T_i(t)$, where $\limsup_{t \to \infty} T_i(t)$ (purchased high trust) and $\liminf_{t \to \infty} T_i(t)$ (decayed low trust) remain far apart, preventing stable classification.}
+    
+    \item \textcolor{black}{Network-Wide Integrity:
+    We define the $Trust Integrity Index$ ($I_{\text{network}}$) to measure the system's ability to classify vehicles based on their actual historical behavior, thus quantifying the security gain of SBTs:
+    \begin{equation}
+    I_{\text{network}}(t) = \frac{1}{N} \sum_{i=1}^{N} \mathbb{1}\left[
+    \text{sgn}(T_i(t) - T_{th}) = \text{sgn}(\bar{B}_i(t) - B_{th})\right]
+    \label{integrity_index}
+    \end{equation}
+    where $T_{th}$ is the trust threshold, $B_{th}$ is the cooperation threshold, $\bar{B}_i(t)$ is vehicle $i$'s historical cooperation rate, and $\mathbb{1}[\cdot]$ is the indicator function. Perfect integrity ($I_{\text{network}} = 1$) means all trust classifications align with actual historical behavior.}
+    
+    \textcolor{black}{
+    \begin{corollary}[Integrity Bounds:]
+    \label{integrity_bounds}
+    Under the SBT-based incentive framework for PureTrust, $\lim_{t \to \infty} I_{\text{network}}^{SBT}(t) = 1$. Under an NFT system with a positive reputation transfer rate $\mu > 0$, the integrity is bounded: $I_{\text{network}}^{NFT}(t) < 1 - \rho \cdot \mu/(1+\mu t)$, where $\rho$ is the ratio of malicious vehicles in the network.
+    \end{corollary} }
+\end{itemize}
+
+\textcolor{black}{
+This formal analysis proves that SBTs maintain superior network integrity by eliminating the pathway for malicious entities to corrupt the trust score via token transfer. }
+
+\subsubsection{SBT Minting}
+To incentivize sustained cooperation, the framework integrates PureSBT, an on-chain reward and reputation system managed by the EC. Once a vehicle accumulates a sufficient positive record (high $\tau_i$ and SDR, with no active risk flags), it becomes eligible for SBT issuance as a permanent record of its trustworthiness. The SBT serves as a decentralized credential that the vehicle has reliably contributed to the network. 
+
+The SBT incentive logic is implemented on-chain using a Solidity smart contract that extends the ERC-721 NFT standard, utilising the ERC-5484 standard~\cite{cai}, to create SBTs. Figure~\ref{sbt} illustrates our proposed framework, comprising four core components that work in coordination to establish trustworthy cooperation through SBT incentives.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Images/sbt_diagram.png} 
+        \caption{SBT Management Lifecycle in the Proposed Framework}
+    \label{sbt}
+\end{figure}
+
+The SBT is bound to the vehicle's blockchain address and cannot be traded or transferred to another vehicle, ensuring that its reputation cannot be sold or transferred. This non-transferability is enforced by the smart contract logic, which is supported by the ERC-5484 standard. The only way to remove an SBT is via burning (revocation), which is $IssuerOnly$ restricted in cases where the token needs to be revoked due to malicious activity. 
+
+A vehicle is eligible for an incentive if it fits the eligibility condition formally expressed as Equation~\ref{sbt_eligibility}.  
+\begin{equation}
+\label{sbt_eligibility}
+\text{Eligible}(i) =
+\begin{cases}
+\text{true}, & N_i \ge N_{\min},\ \text{SDR}_i \ge SDR_{\min},\ R_i = 0~,\cr
+\text{false}, & \text{otherwise.}
+\end{cases}
+\end{equation}
+Let $N_i$ be the total number of delivery attempts by vehicle $i$, and $\text{SDR}_i$ its success rate. Let $R_i$ be a binary risk indicator (with $R_i=1$ if the vehicle has any unresolved malicious flag or high malicious score, otherwise 0). If a vehicle is eligible, the system triggers the minting of an SBT to that vehicle's SBT wallet address. An SBT is minted only if Equation~\ref{mint_condition} holds.
+\begin{equation}
+\label{mint_condition}
+\neg\textit{hasSBT}(h_i) \Rightarrow \textit{mintSBT}(h_i),
+\end{equation}
+where $\text{hasSBT}(h_i)$ queries on-chain state for existing tokens.
+
+The vehicle’s performance data, containing descriptive attributes such as the vehicle’s trust score, successful deliveries, risk score, and malicious count reports, is uploaded to the IPFS for distributed storage. IPFS returns a content identifier (CID) that uniquely addresses the file’s content. The system then invokes the SBT minting process, binding the token to the vehicle's address, as described in Algorithm~\ref{mint}.
+\begin{algorithm}[!htbp]
+\caption{SBT Minting Procedure}
+\label{mint}
+\begin{algorithmic}[1]
+\Require vehicle $i$ data: $N_i$ (deliveries), $\text{SDR}_i$, $R_i$, $\tau_i$
+\If{\textbf{not} $\text{Eligible}(i)$ \textbf{or} $i$ already has SBT} 
+    \State \textbf{abort minting} \Comment{Criteria not met or already rewarded}
+\EndIf 
+\State Assemble token metadata JSON for vehicle $i$:
+\State \hskip1em Include fields: vehicle ID, total deliveries $N_i$, success rate $\text{SDR}_i$, trust score $\tau_i$, current level (Bronze), timestamp, etc.
+\State Upload metadata JSON to IPFS, obtain content hash (CID)
+\State $uri \gets \text{``ipfs://}+\text{CID}$ (IPFS URI for metadata)
+\State \textbf{Blockchain call:} `CooperationSBT.mintSBT(i\_address, uri, $N_i$, $\text{SDR}_i$, $R_i$)`
+\end{algorithmic}
+\end{algorithm}
+
+Once the transaction is confirmed on-chain, the SBT is officially issued and visible in the vehicle's wallet. The SBT metadata is uploaded to the IPFS, a distributed storage system, so that the detailed SBT information is not stored on the blockchain itself, thereby reducing storage overhead~\cite{sejin}.
+
+\subsubsection{SBT Non-Transferability}
+The core feature of SBTs is non-transferability as detailed in Algorithm~\ref{restriction}. The smart contract function includes a strict rule: a token can only change hands if it's being created or destroyed.  Any other attempt to transfer an existing token between two regular accounts is blocked. This update function controls token transfers. It correctly allows minting and burning, but blocks any other transfer with an error message.
+
+\begin{algorithm}
+\caption{SBT Transfer Restriction}
+\label{restriction}
+\begin{algorithmic}[1]
+\Function{\_update}{to, tokenId, auth}
+    \State from $\gets$ \Call{ownerOf}{tokenId}
+    \If{from $\ne$ address(0) \textbf{and} to $\ne$ address(0)}
+        \State \textbf{revert} ``SBT: non-transferable''
+    \EndIf
+    \State \Return from
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{SBT Revocation}
+If a vehicle’s behavior turns malicious and trust deteriorates below thresholds, the vehicle will have its SBT revoked by the $EC$. This implies that vehicle behavior directly affects both short-term trust score and long-term reputation token status. The $EC$ calls the revokeSBT smart contract function, which burns the token and emits a revoked event with a reason code. Because tokens are soulbound, a vehicle cannot escape the consequences of misbehavior by transferring its token away; the only outcome is losing the token and the reputation it represents in the event of malicious activity. This creates a credible, non-transferable reputation system for vehicular networks.
+Algorithm~\ref{sbt_revocation} shows the revocation process.
+\begin{algorithm}[!htpb]
+\caption{SBT Revocation Logic}
+\label{sbt_revocation}
+\begin{algorithmic}[1]
+\Function{RevokeSBT}{\texttt{vehicleId}, \texttt{reason}}
+    \If{SBT does not exist or is already inactive}
+        \State \textbf{revert} with error
+    \EndIf
+    \State Set \texttt{isActive} to \texttt{false}
+    \State Record \texttt{revocationReason}
+    \State Emit \texttt{SBTRevoked} event
+\EndFunction
+
+\Function{CheckSBTRevocation}{\texttt{vehicleId}}
+    \If{vehicle has SBT \textbf{and} \texttt{maliciousScore} $>$ threshold}
+        \State \Call{RevokeSBT}{\texttt{vehicleId}, ``Declining trust over time''}
+    \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\subsection{Proposed PureChain Blockchain Network}
+ PureSBT employs PureChain, a custom $Layer-2$ permissioned blockchain network built on top of Ethereum and it utilizes the proof of authority and association (PoA$^2$) consensus mechanism~\cite{ICCE2025}. The PoA$^2$ consensus mechanism, shown in Figure~\ref{purechain}, enhances the traditional proof of authority (PoA) consensus by introducing a redundant miner that automatically replaces idle miners. This built-in redundancy mechanism ensures uninterrupted consensus, mitigates the risk of downtime due to validator or miner failures, and maintains consistent transaction throughput under dynamic network conditions.
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Images/purechain_algorithm.png}
+    \caption{Validator Selection and Redundancy Handling Workflow of the PoA$^2$ consensus
+}
+    \label{purechain}
+\end{figure}
+As further detailed in Algorithm~\ref{poa2}, PureChain also exhibits energy-efficient mining by implementing Smart Auto Mining Plus (SAM+)~\cite{igboanusi}, where each miner listens to the network and stops mining whenever there are no pending transactions, automatically resuming once new transactions arrive. This eliminates the production of empty blocks and wasted computation. These characteristics make PureChain suitable for edge-assisted scenarios, which demand lightweight, low-latency consensus to accommodate resource-constrained devices~\cite{HopeJournal, ICCE2025}.
+
+\begin{algorithm}[!htbp]
+\caption{\textcolor{black}{PoA$^2$ Consensus Algorithm for PureChain}}
+\label{poa2}
+\small
+{\color{black}
+\begin{algorithmic}[1]
+
+\Procedure{PoA$^2$Consensus}{}
+    \State \textbf{Initialization:} Define $V_{active}$ (active validators) and $V_{redundant}$ (redundant pool)
+    \State Set activity threshold $\theta$ and majority quorum $q = \lfloor |V_{active}|/2 \rfloor + 1$
+
+    \While{Network Running}
+
+        \State \textbf{Step 1: Continuous Validator Monitoring}
+        \For{each validator $v \in V_{active}$}
+            \State Measure sealing activity $S_{activity}(v)$
+            \If{$S_{activity}(v) < \theta$}
+                \State Flag $v$ as misbehaving and open de-authorization vote
+                \State Select replacement candidate $v_{new} \in V_{redundant}$
+                \State Validators vote on activating $v_{new}$
+                \If{Votes in favour $\ge q$}
+                    \State $V_{active} \gets (V_{active} \setminus \{v\}) \cup \{v_{new}\}$
+                    \State $V_{redundant} \gets (V_{redundant} \setminus \{v_{new}\}) \cup \{v\}$
+                \EndIf
+            \EndIf
+        \EndFor
+
+        \State \textbf{Step 2: Smart AutoMining and Block Proposal}
+        \If{PendingTransactions() $>$ 0}
+            \State $v_{prop} \gets$ ScheduledValidator$(V_{active})$
+            \State $block \gets$ CreateAndSignBlock$(v_{prop})$
+            \State Broadcast(block)
+        \EndIf
+
+        \State \textbf{Step 3: Block Validation and Finalization}
+        \If{Receive(block) and Verify(block)}
+            \If{ApprovalsFrom($V_{active}$) $\ge q$}
+                \State Finalize(block)
+            \EndIf
+        \EndIf
+
+    \EndWhile
+\EndProcedure
+
+\end{algorithmic}
+}
+\end{algorithm}
+
+
+\textcolor{black}{
+\subsubsection{Security Properties of the PoA$^2$ Consensus in PureChain}
+PureChain’s PoA$^2$ consensus relies on the security properties below.
+\begin{itemize}
+    \item Permissioned Validator Selection: All active and redundant validators are pre-registered infrastructure entities with cryptographically verified identities. This closed membership model prevents Sybil amplification at the authority layer, since adversaries cannot generate additional validator identities to gain voting power.
+    \item Majority-Based Failure Tolerance: The protocol assumes that a quorum of validators remains honest and online at any given time. This enables the system to tolerate node failures, intermittent availability, and minority faults while ensuring that no block can be finalized unless it satisfies the majority rule $q=\lfloor n/2 \rfloor + 1$.
+    \item Byzantine Resistance Through Monitoring and Governance: Continuous sealing-activity monitoring and on-chain governance allow the system to detect, flag, and replace misbehaving validators through majority voting. Because both block finalization and validator rotation require majority approval, a malicious minority cannot finalize invalid blocks, rewrite chain history, or obtain lasting control of the validator set.
+    \item Resilience to Consensus-Specific Attacks: PureChain mitigates validator collusion, authority-set Sybil attacks, and long-range attacks through its permissioned design and majority-governed state transitions. Collusion is constrained because neither block finalization nor validator updates can occur without a strict majority quorum. Sybil attacks on the authority set are inherently prevented since validator identities correspond to vetted organizations, and additional validator identities cannot be created without organizational vetting and majority approval. Long-range attacks are infeasible because all validator-set changes, including authorizations and de-authorizations, are recorded immutably on-chain, making it impossible for an adversary to reconstruct historical majorities or rewrite chain history without compromising institutional private keys.
+\end{itemize}
+}
+
+
+\textcolor{black}{
+\subsubsection{Fault Tolerance Analysis of the PoA$^2$ Consensus}
+Fault tolerance is the system’s capacity to continue functioning correctly despite the presence of malfunctioning or unreliable nodes and can be characterized by the highest proportion of faulty participants that the system can tolerate without compromising correct operation. The fault tolerance properties of PureChain follow the design of the PoA$^2$ consensus algorithm (Algorithm~\ref{poa2}) and are summarized quantitatively in Table~\ref{consensus_fault} in comparison to PoA and Delegated Proof of Stake (DPoS). In PoA$^2$, both block finalization and validator set reconfiguration require a strict majority quorum $q=\lfloor |V_{active}|/2 \rfloor + 1$, guaranteeing safety as long as fewer than $q$ validators are faulty or unavailable. This quorum rule is uniformly enforced across block production, validator replacement, and governance decisions.}
+
+\begin{table}[!htbp]
+\centering
+\textcolor{black}{
+\caption{Quantitative Comparison of Consensus Fault Tolerance}
+\label{consensus_fault}
+\scalebox{0.7}{
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Consensus} & \textbf{\begin{tabular}[c]{@{}c@{}}Validator\\  Set Size\end{tabular}} & \textbf{Fault Tolerance} & \textbf{Failure Impact} \\ \hline
+DPoS & $n$ (elected) & $< \frac{n}{3}$ Byzantine & \begin{tabular}[c]{@{}c@{}}Validator collusion leading to\\ centralized control\\  and reduced participation\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}c@{}}Conventional \\ PoA\end{tabular} & $n$ & \begin{tabular}[c]{@{}c@{}}$< \frac{n}{2}$ \\ inactive or faulty\end{tabular} & \begin{tabular}[c]{@{}c@{}}Authority centralization/\\ collusion, leading to\\  biased block production\end{tabular} \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}PureChain \\ PoA$^2$\end{tabular}} & \begin{tabular}[c]{@{}c@{}}$n$\\  (active + redundant)\end{tabular} & $< \lfloor \frac{n}{2} \rfloor$ & \begin{tabular}[c]{@{}c@{}}Automatic replacement by \\ redundant validator\end{tabular} \\ \hline
+\end{tabular}}
+}
+\end{table}
+
+\textcolor{black}{
+In contrast to conventional PoA, which relies on a static authority set and may suffer from centralization or stalled block production when validators fail or collude, PoA$^2$ continuously monitors validator activity and deterministically replaces inactive or misbehaving validators from a pre-authorized redundant pool. This mechanism limits the impact of validator failures and bounds recovery time without requiring external intervention.}
+
+\textcolor{black}{
+Compared to DPoS, which tolerates up to one-third Byzantine validators but relies on periodic election epochs and off-chain governance, PoA$^2$ integrates validator governance directly into the consensus process. As a result, fault recovery does not depend on delayed voting cycles and converges as soon as a majority of honest validators is available.}
+
+\textcolor{black}{
+\subsection{Blockchain Scalability Technologies and Positioning}
+Recent blockchain scalability approaches commonly include Layer-2 execution, which scales a Layer-1 blockchain by moving computation and state updates off-chain while preserving on-chain security guarantees. Other techniques include sharding, which parallelizes transaction processing across multiple partitions; sidechains, which tailor consensus and validator membership to a specific workload; and off-chain storage, which keeps large data external while anchoring integrity commitments on-chain~\cite{lincopinis2024current}. In PureTrust, the proposed PureChain blockchain is a permissioned Layer-2 network that leverages Zero-Knowledge (ZK) rollups together with SAM$^{+}$ and PoA$^{2}$ to improve scalability. PureTrust also uses IPFS to store bulky trust logs and metadata off-chain, recording only the corresponding CIDs on-chain. This design limits on-chain storage growth and reduces transaction payload size while preserving auditability and overall scalability.}
+
+
+\section{Experimentation and Performance Evaluation}
+\textcolor{black}{
+\subsection{Vehicle Traffic Configuration}
+The simulated scenario, as shown in Figure~\ref{urban_map}, uses a 2~km × 2~km map from OpenStreetMap (OSM) covering Dosan-daero and Garosu-gil in Sinsa-dong, Gangnam-gu, Seoul, South Korea. This network map provides a realistic road topology featuring multiple intersections, traffic lights, multi-lane roads, and reflects varied V2V/V2I connectivity, typical for dense metropolitan networks.}
+
+\begin{figure*}[!htbp]
+    \centerline{\includegraphics[width=0.8\linewidth]{Images/OSM MAP OF URBAN SCENARIO SHOWING MOVING VEHICLES.png}}
+    \caption{OSM Map Of The Simulated Scenario Showing Moving Vehicles}
+    \label{urban_map}
+\end{figure*}
+\textcolor{black}{
+The simulation framework transforms real-world OpenStreetMap (OSM) road network data into an executable traffic scenario in the Simulation of Urban MObility (SUMO)~\cite{sumo}. This process captures realistic road layouts and traffic controls, which are then used to generate vehicle routes and detailed trajectory traces. The resulting traffic replay, which dictates the scale of our simulation, comprises 672 unique vehicles using a trace-based mobility model. Vehicle trajectory and network traffic data, including time-stamped position, speed, and route information, are output as Floating Car Data (FCD) and replayed in a discrete-event simulation environment, SimPy, to simulate vehicle movement within the trust management system.
+} 
+
+
+
+\subsection{Experimental Setup}
+
+\textcolor{black}{
+The generated datasets from the vehicle traffic configuration, comprising mobility traces, communication events (such as packet forwarding or drops), and historical trust scores, are used to enable robust detection and analysis of trustworthy and anomalous vehicular behaviors, ensuring the evaluation accurately reflects real-world traffic and adversarial scenarios.}
+
+
+Blockchain interactions were implemented using Web3.py, with smart contracts written in Solidity and deployed on the PureChain network. To enable a fair and consistent performance evaluation, the same contract logic was deployed under identical conditions on Ethereum Sepolia, Quorum, and Hyperledger Fabric, each operating under distinct consensus mechanisms. This setup allows for comparative analysis across both permissioned and permissionless blockchain environments.
+Additional simulation parameters considered in this work are depicted in Table~\ref{parameters}. 
+
+\begin{table*}[!htbp]
+\centering
+\caption{Simulation Parameters Considered in This Study}\label{parameters}
+\scalebox{.85}{
+\begin{tabular}{|p{4.5cm}|p{3.5cm}|p{8.8cm}|}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Description} \\ \hline
+Vehicle Fleet Size & 672 & Number of vehicles in each simulation run \\ \hline
+Simulation Time & 3600 & Rounds in which the simulation proceeds \\ \hline
+Communication Range & 300 & Distance within which vehicles can exchange messages \\ \hline
+Initial Trust & 0.5 & Benign and malicious begin with a uniform trust score of 0.5 \\ \hline
+Trust Threshold & 0.4 & Minimum trust score required for SBT revocation \\ \hline
+Gossip Protocol Chance & 30\% & Probability that a benign vehicle gossips and updates the trust of another benign vehicle after a relay \\ \hline
+Vehicle Energy Threshold & $> 50$ kJ & Vehicles must have more than 50 kJ of energy to be considered active for participation in a round \\ \hline
+SBT Eligibility Relay Attempts & 10 & A vehicle must have at least 10 relay attempts to be considered for an SBT \\ \hline
+SBT Eligibility Success Rate & 60\% & A vehicle must have a success rate of at least 60\% to be eligible for an SBT \\ \hline
+Tunable weights $\lambda_{1}\sim\lambda_{4}$ & 0.2, 0.1, 0.3, 0.1 & Cooperation, volatility, malicious activity, and age decay weights to prevent overly aggressive degradation \\ \hline
+$\gamma$ & 0.1 & Multiplies 1/\(E_k\), the vehicle's residual energy, penalizing low‑energy vehicles to conserve their battery\\ \hline
+$\delta$ & 0.05 & Mild inactivity penalty; trust decays slowly to avoid abrupt drops for occasional inactivity \\ \hline
+\end{tabular}}
+\end{table*}
+
+\textcolor{black}{
+\subsection{Detection Accuracy Under Adversarial Saturation}
+Accurate and stable misbehavior detection is essential for maintaining trust and safety in adversarial V2X environments. Accordingly, confidence intervals (CI) are computed for each malicious participation ratio using the normal approximation in Equation~\ref{ci} to evaluate statistical reliability.
+\begin{equation}
+    CI = \bar{x} \pm \left( z \cdot \frac{\sigma}{\sqrt{n}} \right),
+    \label{ci}
+\end{equation}
+}
+\textcolor{black}{
+where $\bar{x}$ is the sample mean, $\sigma$ is the standard deviation, $n$ denotes the number of observations, and $z$ is the corresponding Z-score for a 95\% confidence level.
+}
+
+\textcolor{black}{
+Table~\ref{accuracy} presents corresponding 95\% confidence intervals and error margins for the performance across different malicious ratios. Across all adversarial intensities (20\%–80\%), the reported confidence intervals remain narrow, with accuracy error margins below 0.7\% and macro F1-score margins below 4.6\%. This low dispersion indicates consistent misbehavior-detection performance across the different attacks considered. Notably, even under severe adversarial saturation (80\% malicious vehicles), the framework maintains stable macro-level precision, recall, and F1-score, demonstrating resilience to the implemented trust-related attacks.
+}
+
+\begin{table*}[!htbp]
+\centering
+\textcolor{black}{
+\caption{Detection Performance with 95\% Confidence Intervals}
+\label{accuracy}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Malicious Ratio} & \textbf{Accuracy} & \textbf{Precision (Macro)} & \textbf{Recall (Macro)} & \textbf{F1-score (Macro)} \\ \hline
+\textbf{20\%} & 0.959 $\pm$ 0.007 & 0.898 $\pm$ 0.041 & 0.839 $\pm$ 0.041 & 0.829 $\pm$ 0.046 \\ \hline
+\textbf{40\%} & 0.978 $\pm$ 0.006 & 0.906 $\pm$ 0.024 & 0.906 $\pm$ 0.024 & 0.903 $\pm$ 0.024 \\ \hline
+\textbf{60\%} & 0.967 $\pm$ 0.007 & 0.897 $\pm$ 0.020 & 0.921 $\pm$ 0.018 & 0.902 $\pm$ 0.021 \\ \hline
+\textbf{80\%} & 0.987 $\pm$ 0.004 & 0.970 $\pm$ 0.011 & 0.976 $\pm$ 0.009 & 0.972 $\pm$ 0.010 \\ \hline
+\end{tabular}
+}
+\end{table*}
+
+\textcolor{black}{
+These results suggest that the combined effects of trust decay, indirect feedback, and behavior-based analysis enable the framework to identify inconsistent or strategic misbehavior patterns, even when malicious vehicles attempt to mimic benign behavior. As a result, the detection pipeline remains robust and is not easily overwhelmed by a majority of adversarial participants.
+}
+
+\textcolor{black}{
+\subsection{Resilient Communication Through Trust-Aware Routing}
+The successful delivery ratio (SDR) is used to evaluate the effectiveness of message forwarding under benign and adversarial conditions. To assess result stability, 95\% confidence intervals were computed for SDR using the standard normal approximation in Equation~\ref{ci}.}
+
+\begin{table}[!htbp]
+\centering
+\textcolor{black}{
+\caption{Comparative Analysis of SDR across Varying Malicious Ratios with 95\% Confidence Intervals}
+   \label{sdr}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Malicious Ratio} & \textbf{\begin{tabular}[c]{@{}c@{}}Benign \\ (95\% CI)\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Malicious Mean\\  (95\% CI)\end{tabular}} \\ \hline
+\textbf{20\%} & 84.48 ($\pm$1.12) & 67.29 ($\pm$6.42) \\ \hline
+\textbf{40\%} & 85.33 ($\pm$1.23) & 50.81 ($\pm$4.84) \\ \hline
+\textbf{60\%} & 85.30 ($\pm$1.57) & 41.32 ($\pm$3.79) \\ \hline
+\textbf{80\%} & 85.65 ($\pm$2.00) & 30.89 ($\pm$3.23) \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\textcolor{black}{
+As shown in Table~\ref{sdr}, the SDR of malicious vehicles decreases sharply as adversarial participation increases, dropping from 67.29\% at 20\% malicious ratio to 30.89\% at 80\%. In contrast, benign vehicles maintain a stable SDR of approximately 85\% across all scenarios. This divergence reflects the effectiveness of trust-aware routing in isolating malicious nodes and preserving reliable communication among cooperative vehicles. Importantly, the confidence intervals for benign and malicious SDR do not overlap at any evaluated ratio, indicating statistically significant separation between the two groups ($p < 0.05$). These results confirm that PureTrust maintains cooperative communication performance even under heavy adversarial pressure and can distinguish between vehicle types as more evidence is collected.
+}
+
+\textcolor{black}{
+\subsection{Trust Evolution Analysis}
+Figure~\ref{trust_per_class} illustrates the evolution of trust scores for representative vehicles across eight behavioral types: selfish, sybil, MITM, black hole, falsifier, gray hole, on-off, and benign, reflecting the trust trajectory of the vehicle whose trust score is continuously updated regarding its reliability, behavioral consistency, malicious resistance, and temporal decay.}
+
+\textcolor{black}{
+The trust score of the benign vehicle (car\_161) increases steadily from the threshold ($0.5$) and eventually converges near the maximum value ($1.0$). This reflects the robustness of the Bayesian Beta-estimated trust mechanism and the effectiveness of the cooperation reinforcement term, which together ensure that sustained cooperative behavior is promptly and reliably rewarded.} 
+
+\textcolor{black}{
+However, vehicles exhibiting misbehavior such as selfish (car\_532), black hole (car\_908), Sybil (car\_249), falsifier (car\_247), on-off attack (car\_358), gray hole (car\_204), and MITM (car\_217) attacks are consistently penalized, with trust scores dropping according to the severity and consistency of their misbehavior.}
+
+\textcolor{black}{
+This demonstrates that the framework effectively distinguishes between honest and adversarial behaviors, promptly penalizing uncooperative actions and adapting penalties based on the attack type. Additionally, it highlights the robustness and adaptability of the proposed trust model for reliable misbehavior detection and management in dynamic vehicular networks by responding in real-time to shifts in vehicle behavior, rewarding cooperation, and punishing manipulation.}
+
+\begin{figure}[!htbp]
+   \centering
+\includegraphics[width=0.45\textwidth]{Images/trust_per_class.png}
+       \caption{Evolution of Trust Per Vehicle Class Type}
+   \label{trust_per_class}
+\end{figure}
+
+The final trust score of vehicles over the simulation duration, shown in Figure~\ref{final_trust}, shows that benign vehicles converge to trust scores near an average of $0.8$. Malicious vehicles degrade towards $0.3$, reflecting that the trust-based routing decisions made are both informed and reliable.
+\begin{figure}[!htbp]
+   \centering
+   \includegraphics[width=0.4\textwidth]{Images/final_trust.png}
+   \caption{Final Trust of Benign vehicles Over Time}
+   \label{final_trust}
+\end{figure}
+
+\textcolor{black}{
+Table~\ref{trust_comparison} presents a comparative analysis of the proposed framework against state-of-the-art trust management schemes across multiple dimensions, focusing on the system's ability to maintain high trust values under heavy adversarial presence and the structural integrity of the incentive mechanisms employed.}
+
+\begin{table*}[!htbp]
+\centering
+\caption{Trust Performance Comparison with Existing Schemes}
+\label{trust_comparison}
+\scalebox{.85}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{\textcolor{black}{Study Ref.}} 
+& \textbf{\textcolor{black}{\begin{tabular}[c]{@{}c@{}}Max Malicious\\ Ratio \\ Considered(\%)\end{tabular}}} 
+& \textbf{\textcolor{black}{\begin{tabular}[c]{@{}c@{}}Average Trust at\\ Max Malicious Ratio\end{tabular}}} 
+& \textbf{\textcolor{black}{Incentive Type}} 
+& \textbf{\textcolor{black}{Transferability}} \\
+\hline
+\textcolor{black}{Ruan et al.~\cite{ruan}}  & \textcolor{black}{90} & \textcolor{black}{0.14} & \textcolor{black}{None} & \textcolor{black}{N/A} \\
+\textcolor{black}{Ahmed et al.~\cite{ahmed}} & \textcolor{black}{50} & \textcolor{black}{0.80} & \textcolor{black}{Token rewards} & \textcolor{black}{Transferable} \\
+\textcolor{black}{Xiao et al.~\cite{Xiao}} & \textcolor{black}{50} & \textcolor{black}{0.50} & \textcolor{black}{Trust credit} & \textcolor{black}{Transferable} \\
+\textcolor{black}{Wang et al.~\cite{wang}} & \textcolor{black}{80} & \textcolor{black}{0.70} & \textcolor{black}{Implicit via trust updates} & \textcolor{black}{Transferable} \\
+\textcolor{black}{Mohammad et al.~\cite{Mohammad}} & \textcolor{black}{75} & \textcolor{black}{0.78} & \textcolor{black}{Market value ratings} & \textcolor{black}{Transferable} \\
+\textbf{\textcolor{black}{PureTrust}} & \textbf{\textcolor{black}{80}} & \textbf{\textcolor{black}{0.822}} & \textbf{\textcolor{black}{Soulbound tokens}} & \textbf{\textcolor{black}{Non-transferable}} \\
+\hline
+\end{tabular}
+}
+\end{table*}
+\textcolor{black}{
+The results indicate that existing approaches vary widely in both the maximum malicious participation ratios considered and the resulting trust levels, reflecting differences in threat models and trust update mechanisms. Several incentive-based schemes maintain relatively high trust values at moderate attack intensities but rely on transferable rewards or reputation credits.}
+
+\textcolor{black}{
+In contrast, PureTrust maintains a higher average trust score (0.822) at an 80\% malicious ratio while enforcing non-transferable, identity-bound incentives through soulbound tokens as incentives for cooperative participation. The non-transferable design of SBTs structurally prevents reputation manipulation, addressing known limitations of transferable incentive mechanisms discussed in prior work. These results suggest that PureTrust combines competitive trust resilience under high adversarial presence with stronger incentive persistence guarantees for robust trust management in adversarial V2X environments.}
+
+\subsection{IPFS Metadata Storage}
+Once the smart contract mints the SBT, the SBT metadata is stored on IPFS, as shown in Figure~\ref{ipfs_metadata}.
+\begin{figure*}[!htbp]
+    \centering
+       \includegraphics[width=0.7\textwidth]{Images/ipfs_data.png}
+       \caption{SBT Metadata Stored on the IPFS for $car\_526$}
+       \label{ipfs_metadata}
+\end{figure*}
+The stored metadata includes a list of vehicle attributes, such as Vehicle ID, Vehicle address, and performance metrics, including delivery attempts, success delivery rate, detection accuracy, trust scores, risk score, and issue date. Each uploaded record generates a unique CID, which is later anchored on-chain for integrity verification.
+  
+To retrieve information about a particular SBT, the CID stored on-chain is used to query for the token's metadata and it returns the same metadata previously stored by IPFS.
+
+
+\textcolor{black}{
+\subsection{Smart Contract Security Validation Using Slither}
+It is critical to assess smart contract security before deployment. Therfore, a vulnerability analysis with the Slither framework~\cite{feist2019slither} was performed on the implemented smart contract using the Solidity compiler, $0.8.18$.}
+
+\textcolor{black}{
+The analysis targeted core vulnerability classes summarized in Table~\ref{audit} and reported no critical or high‑severity issues. Access control is enforced via \textit{onlyOwner} for minting and revocation, reentrancy and low‑level call risks are negligible since no Ether is forwarded and no low‑level calls are used. Arithmetic is safeguarded by Solidity’s $\geq 0.8$ built‑in overflow checks. These results indicate that the smart contract is robust for the surveyed classes and aligns with established smart contract security practices.}
+
+
+\begin{table*}[!htbp]
+\centering
+\caption{Slither Vulnerability Detection Summary}
+\label{audit}
+\begin{tabular}{p{3cm}p{2cm}p{8cm}}
+\hline
+\textcolor{black}{\textbf{Vulnerability Class}} & \textcolor{black}{\textbf{Relevance}} & \textcolor{black}{\textbf{Findings}} \\ \hline
+\textcolor{black}{Access Control}       & \textcolor{black}{High}   & \textcolor{black}{Owner-only minting and revocation via $onlyOwner$; no unauthorized mint/burn paths observed.} \\ 
+\textcolor{black}{Authentication}       & \textcolor{black}{High}   & \textcolor{black}{Authentication delegated to ownership; no additional identity mechanisms.} \\
+\textcolor{black}{Reentrancy}           & \textcolor{black}{Low}    & \textcolor{black}{No external value transfers or low-level calls; inherited ERC721 hooks are guarded.} \\ 
+\textcolor{black}{Arithmetic}           & \textcolor{black}{Medium} & \textcolor{black}{Simple counters/threshold checks; Solidity $\geq$0.8 auto-reverts on overflow/underflow; no unsafe arithmetic patterns.} \\ 
+\textcolor{black}{Low-level calls}      & \textcolor{black}{None}   & \textcolor{black}{No use of $call$ / $delegatecall$ / $staticcall$.} \\ 
+\textcolor{black}{Denial of Service}    & \textcolor{black}{Low}    & \textcolor{black}{No unbounded external calls; revocation history loop bounded per token.} \\ 
+\textcolor{black}{Uninitialized storage} & \textcolor{black}{None}   & \textcolor{black}{No uninitialized storage variables or pointers detected.} \\ \hline
+\end{tabular}
+\end{table*}
+
+
+\subsection{PureSBT Incentive Evaluation}
+\subsubsection{SBT Issuance and Storage to the Vehicle's SBT Wallet}
+Figure~\ref{wallet} shows a vehicle's SBT wallet after receiving an SBT. The wallet contains a non-fungible token entry with a Token ID, the vehicle's blockchain address, and the IPFS CID as a token Uniform Resource Identifier (URI) pointing to the metadata on IPFS. The burn authority is also indicated as IssuerOnly, meaning only the issuer can revoke this token.
+
+\begin{figure}[!htbp]
+    \centering
+       \includegraphics[width=0.5\textwidth]{Images/sbt_wallet2.png}
+       \caption{SBT Wallet Data Stored by Vehicle car\_526}
+       \label{wallet}
+\end{figure}
+
+This demonstrates end-to-end verifiability because a vehicle's SBT can be queried from the blockchain. Once the IPFS hash is obtained, the exact record of that vehicle's performance and trust metrics can be retrieved.
+
+Figure~\ref{minted_sbt} illustrates that the number of minted SBTs decreases as the proportion of malicious vehicles increases, because only vehicles whose trust scores exceed the prescribed threshold and that demonstrate sustained cooperation are deemed eligible. The SBT lifecycle enforces long-term trust accumulation and merit-based credentialing. Despite sporadic good behavior by malicious vehicles fail to accumulate the delivery consistency and trust levels required for SBT eligibility. 
+
+\begin{figure}[!htbp]
+   \centering
+   \includegraphics[width=0.5\textwidth]{Images/minted_SBTs.png}
+   \caption{SBT Distribution Across the System Over Time}
+   \label{minted_sbt}
+\end{figure}
+
+\subsubsection{SBT Non-Transferability}
+To verify the core feature of SBTs, which is non-transferability, we perform a test that explicitly tries to perform a transfer from one vehicle to another. car\_526 already holds an SBT in its wallet and attempts to transfer it to car\_369. The attempt to transfer an existing token between the two vehicles is blocked, as shown in Figure~\ref{nontransfer}.
+
+\begin{figure*}[!htbp]
+    \centering
+       \includegraphics[width=0.8\textwidth]{Images/non_transfer_Sbt.png}
+       \caption{SBT Non-Transferability Test Between 2 Vehicles}
+       \label{nontransfer}
+\end{figure*}
+
+\subsubsection{SBT Revocation}
+A vehicle’s SBT can be revoked if it exhibits sustained malicious activity and its trust score falls below a defined threshold. For example, car\_526 initially holds an SBT at a 0.2 malicious ratio but later behaves maliciously at a 0.8 malicious ratio; as its misbehavior persists and trust degrades, the SBT is revoked, as illustrated in Figure~\ref{revoke}.
+
+\begin{figure*}[!htbp]
+    \centering
+       \includegraphics[width=0.8\textwidth]{Images/sbt_revoke.png}
+       \caption{Revocation of an SBT After Trust Degradation Due to Malicious Activity}
+       \label{revoke}
+\end{figure*}
+
+\textcolor{black}{
+\subsection{Blockchain Performance Evaluation}
+The blockchain evaluation compares the performance of four blockchain networks: Hyperledger Fabric, Ethereum Sepolia, Quorum, and the proposed PureChain, in terms of throughput, latency, and CPU utilization, using the same smart contract deployed across all networks. }
+
+\textcolor{black}{
+Blockchain latency is measured as the average confirmation time for various smart contract functions from transaction submission to finality. Throughput is the rate at which the blockchain processes transactions per second (tps), while CPU usage indicates processing efficiency and network performance. 
+Table~\ref{blockchain_performance} summarizes the simulation parameters and provides an overall evaluation of these four blockchain platforms.}
+\begin{table*}[!htbp]
+\centering
+\caption{Performance Evaluation of the Implemented Blockchain Networks}
+\label{blockchain_performance}
+\begin{tabular}{|c|cccc|}
+\hline
+\multirow{2}{*}{\textcolor{black}{\textbf{Parameter}}} & \multicolumn{4}{c|}{\textcolor{black}{\textbf{Blockchain Network}}} \\ \cline{2-5} 
+ & \multicolumn{1}{c|}{\textcolor{black}{\textbf{PureChain}}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{Quorum}}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{\begin{tabular}[c]{@{}c@{}}Hyperledger \\ Fabric\end{tabular}}}} & \textcolor{black}{\textbf{Ethereum Sepolia}} \\ \hline
+\textcolor{black}{\textbf{Blockchain Type}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{Permissioned}}} & \multicolumn{1}{c|}{\textcolor{black}{Permissioned}} & \multicolumn{1}{c|}{\textcolor{black}{Permissioned}} & \textcolor{black}{Permissionless} \\ \hline
+\textcolor{black}{\textbf{Consensus}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{\begin{tabular}[c]{@{}c@{}}Proof of Authority \\ and Association\\  (PoA$^2$)\end{tabular}}}} & \multicolumn{1}{c|}{\textcolor{black}{\begin{tabular}[c]{@{}c@{}}Proof of\\ Authority\\ (PoA)\end{tabular}}} & \multicolumn{1}{c|}{\textcolor{black}{Kafka}} & \textcolor{black}{\begin{tabular}[c]{@{}c@{}}Proof of Stake\\ (PoS)\end{tabular}} \\ \hline
+\textcolor{black}{\textbf{CPU Utilization}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{0.85\%}}} & \multicolumn{1}{c|}{\textcolor{black}{2.46\%}} & \multicolumn{1}{c|}{\textcolor{black}{16.43\%}} & \textcolor{black}{0.15\%} \\ \hline
+\textcolor{black}{\textbf{Average Latency}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{1.54s}}} & \multicolumn{1}{c|}{\textcolor{black}{4.91s}} & \multicolumn{1}{c|}{\textcolor{black}{7.69s}} & \textcolor{black}{11.18s} \\ \hline
+\textcolor{black}{\textbf{Average Throughput}} & \multicolumn{1}{c|}{\textcolor{black}{\textbf{1.130 tps}}} & \multicolumn{1}{c|}{\textcolor{black}{0.052 tps}} & \multicolumn{1}{c|}{\textcolor{black}{0.083 tps}} & \textcolor{black}{0.021 tps} \\ \hline
+\end{tabular}
+\end{table*}
+
+\textcolor{black}{
+Figure~\ref{blockchain_functions} presents the performance of the considered blockchain networks across various smart contract functions: $recordDelivery$, $setTrust$, $recordMaliciousBehavior$, and $mintSBT$.}
+ \begin{figure*}[!htbp]
+  % \centering
+   \begin{subfigure}{0.5\linewidth}
+        \includegraphics[width=\linewidth]{Images/blockchain_throughput.png}
+      \caption{Throughput Comparison}
+      \label{throughput}
+   \end{subfigure}
+   \begin{subfigure}{0.5\linewidth}
+        \includegraphics[width=\linewidth]{Images/blockchain_latency.png}
+        \caption{Latency Comparison}       
+        \label{latency}
+    \end{subfigure}
+   \caption{Blockchain Performance Comparison of PureChain and Sate-of-the-art Blockchain Networks}
+   \label{blockchain_functions}
+\end{figure*}
+
+% \subsubsection{Blockchain Latency}
+\textcolor{black}{
+As shown in Figure~\ref{latency}, PureChain maintains consistently low latency below $2$ seconds across all functions and is more than $10$ times faster than Hyperledger Fabric and $8$ times faster than Quorum and Sepolia. Hyperledger Fabric and Quorum have consistently high latency ($10$ and $5$ seconds, respectively) due to block batching and endorsement delays.
+Additionally, Sepolia faces longer block intervals and network-wide consensus, resulting in slower transaction processing.
+PureChain’s faster block times, supported by the PoA$^2$ consensus, ensure timely synchronization of trust and behavior records, which is essential for real-time misbehavior response and cooperative routing decisions. }
+
+\textcolor{black}{
+As shown in Figure~\ref{throughput}, the proposed PureChain network achieves the highest transaction throughput. Hyperledger Fabric achieves a moderate throughput of $0.10$ tps due to its orderer-based architecture and the overhead of its endorsement policy.
+Quorum and Sepolia perform similarly, as both are constrained by the consensus delays inherent to PoA and PoS, respectively.
+The high throughput of PureChain ensures that trust updates, cooperation logs, and token mint records can be recorded with minimal delay, and is attributed to the PoA$^2$ consensus mechanism, which provides a built-in redundancy mechanism to ensure uninterrupted consensus for real-time trust anchoring, a necessity for time-sensitive vehicular networks.}
+
+\textcolor{black}{
+Figure~\ref{cpu} shows the average CPU consumption of each blockchain network during smart contract execution.
+\begin{figure}[!htbp]
+    \centering
+       \includegraphics[width=0.5\textwidth]{Images/blockchain_cpu_usage.png}
+       \caption{Average CPU Usage Analysis for Different Blockchain Networks}
+       \label{cpu}
+\end{figure}
+PureChain exhibits a mean CPU usage of 0.85\%, demonstrating highly efficient resource utilization suitable for edge deployment.
+In contrast, Hyperledger Fabric consumes up to 20.53\%, mainly due to its multiple peer–orderer interactions and containerized architecture.
+Quorum and Sepolia show lower consumption of 2.46\% and 0.15\%, respectively, but at the cost of reduced throughput and responsiveness.
+The reduced CPU footprint of PureChain stems from its adoption of smart automining plus (SAM+). Unlike other blockchain networks, PureChain does not involve mining empty blocks, which conserves resources, making it suitable for deployment on resource-constrained edge nodes. Overall, the results demonstrate that PureChain is capable of handling the SBT incentive mechanism with low latency overhead, making it feasible to integrate such a system into V2X operations.}
+
+\textcolor{black}{
+\subsection{Practical Deployment and Operational Feasibility}
+The proposed PureTrust framework aligns with existing V2X infrastructures by distributing computation between vehicles and roadside infrastructure. Vehicles equipped with on-board units perform packet forwarding, while RSUs act as edge coordinators responsible for trust aggregation and blockchain interaction based on vehicle behavior. This separation limits on-board computational requirements and preserves compatibility with current vehicular hardware.}
+
+\textcolor{black}{
+To manage data volume and communication overhead, PureTrust adopts a hybrid storage approach. The blockchain maintains a compact, immutable record of trust-related state changes and incentive identifiers, while detailed trust logs are stored off-chain on IPFS. This reduces on-chain overhead while preserving auditability and traceability of trust evolution.}
+
+\textcolor{black}{
+The modular design of PureTrust supports incremental deployment, allowing the framework to be introduced in localized regions and expanded as infrastructure coverage increases. By binding reputation to non-transferable credentials and enforcing trust evolution through decentralized validation, PureTrust provides a trust-management foundation for safety-critical V2X applications without requiring disruptive changes to existing communication systems.}
+
+
+\section{Conclusion, Challenges and Future Works} 
+\textcolor{black}{
+\subsection{Conclusion}
+This study presented PureTrust, an incentive-aware trust management framework for V2X networks that combines hybrid trust computation with immutable blockchain-based accountability. The framework combines the Beta‑Bernoulli Bayesian trust model with critical vehicle patterns of cooperation responsiveness, volatility, malicious behavior penalty, and temporal decay to produce an adaptive and behavior-driven trust evaluation. By leveraging non-transferable soulbound tokens anchored on the PureChain blockchain, PureTrust enforces identity-bound reputation, effectively mitigating trust manipulation and reputation laundering inherent in transferable incentive schemes. The use of IPFS for off-chain storage further enables tamper-evident and storage-efficient management of trust metadata without imposing excessive on-chain overhead.
+Experimental evaluation across malicious participation ratios from 20\% to 80\% demonstrates that PureTrust maintains stable misbehavior-detection performance, preserves trust for benign vehicles, and sustains reliable message delivery under adversarial conditions. Comparative analysis across both permissioned and permissionless blockchain platforms shows that PureChain achieves lower latency, higher throughput, and lower CPU overhead than Hyperledger Fabric, Ethereum Sepolia, and Quorum, highlighting its suitability for resource-constrained, latency-sensitive V2X environments.}
+
+
+\textcolor{black}{
+\subsection{Limitations, Open Challenges and Future Works}
+\label{limitations}
+While PureTrust demonstrates robust performance in trust management and incentive provisioning for V2X networks, several limitations necessitate further research.}
+
+\textcolor{black}{
+\subsubsection{Scalability and Integration Constraints}
+The PureTrust architecture is designed around RSU-based coordination, which effectively manages local and regional trust evaluations. However, in high-density urban deployments, a single blockchain structure may encounter scalability bottlenecks due to increased synchronization overhead and block propagation latency across the entire network. To mitigate these constraints, incorporating blockchain sharding, which partitions the network into smaller, parallel-processing subnetworks based on geographic regions, represents a natural evolution of this framework. This would allow for localized consensus execution while maintaining global trust integrity through cross-shard communication protocols.}
+
+\textcolor{black}{
+\subsubsection{Privacy Implications of Identity-Bound Reputation}
+The non-transferability of SBTs, while effective in preventing reputation laundering and Sybil attacks, inherently binds reputation credentials to a vehicle’s blockchain identity. This persistent linkage may enable long-term association of behavioral records across network interactions, raising privacy considerations. Although blockchain addresses are pseudonymous and do not directly reveal real-world identities, correlation attacks exploiting temporal or contextual metadata may infer vehicle behavior patterns when combined with external data sources. Future extensions of this work will explore privacy-preserving mechanisms, such as zero-knowledge proofs, to enable identity-bound reputation verification with reduced information disclosure.
+}
+
+\textcolor{black}{
+\subsubsection{Off-Chain Metadata Integrity and Availability}
+The integration of IPFS enables scalable off-chain storage while introducing considerations related to metadata integrity and availability. PureTrust leverages IPFS’s content-addressable design, where each metadata object is referenced by a Content Identifier (CID) derived from a cryptographic hash of its contents. Because the CID is immutably recorded on the PureChain ledger, any modification to the off-chain data results in a hash mismatch, making unauthorized tampering immediately detectable.}
+
+\textcolor{black}{
+Data availability, however, remains an operational consideration, as IPFS does not guarantee persistence without sufficient replication or pinning. While no retrieval failures were observed in the evaluation due to the use of a local IPFS node, large-scale or infrastructure-sparse deployments may experience delays caused by limited replication or network congestion. To address this, practical deployments should adopt a local-first storage model in which RSUs operate as persistent IPFS peers for their vehicular clusters, ensuring high availability and low-latency access to trust metadata in safety-critical V2X environments.}
+
+\textcolor{black}{
+\subsubsection{IPFS Metadata Privacy and Information Disclosure} The use of IPFS for storing vehicle performance metadata significantly reduces on-chain storage overhead by only anchoring the unique CID on the PureChain ledger. PureTrust currently stores comprehensive performance records, including trust scores, SDR, and malicious behavior logs as metadata on IPFS. While this level of detail is necessary for edge coordinators to verify trust and a vehicle's eligibility for SBTs, it introduces a privacy trade-off where a vehicle’s historical performance becomes visible to all authorized network participants. To mitigate the exposure of sensitive vehicular information, PureTrust follows a data minimization approach, storing only operational metrics required for trust verification rather than physical identity or precise location data. A limitation of this approach is that IPFS itself does not provide built-in access control; thus, future improvements of the framework will explore the use of encrypted IPFS payloads to ensure data confidentiality even within a permissioned environment.
+}
+
+\textcolor{black}{
+\subsubsection{Real-time data congestion}
+Under dense vehicular traffic, real-time data congestion may occur due to simultaneous trust updates, message relays, and log submissions While off-chain IPFS storage mitigates blockchain data overload, network bandwidth saturation and transient latency spikes remain potential bottlenecks for real-time trust propagation especially in infrastructure-sparse regions noting the need for trust management with reduced infrastructure support.}
+
+\textcolor{black}{
+\subsubsection{Operation in Heterogeneous V2X Environments}
+The interaction of vehicles with diverse entities such as RSUs, pedestrians’ mobile devices, edge servers, and sensing infrastructures, introduces nontrivial interoperability and consistency challenges. These entities often exhibit different trust capabilities and computational resources. As a result, variations in processing latency, communication reliability, and trust semantics may affect the timing and consistency of trust updates.}
+
+
+\textcolor{black}{
+The above limitations do not undermine the framework's demonstrated effectiveness in trust management and malicious behavior detection but highlight important considerations for further research to ensure privacy-sensitive trust management in vehicular environments.}
+
+
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,IEEEexample,newref}
+\vspace{-1.1cm}
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in, clip,keepaspectratio]{bibliography/Images/Hope2.jpg}}]{Hope Leticia Nakayiza} is a master's student in IT-Convergence Engineering, Networked Systems Laboratory of the IT-Convergence Engineering Department at Kumoh National Institute of Technology, Gumi, South Korea. She received a Bachelor of Software Engineering (B.Eng.) from Kangnam University, Yongin, South Korea in 2023. Her current research interests include artificial intelligence, blockchain applications, and optimization for Internet of Vehicles security.
+\end{IEEEbiography}
+\vspace{-1.1cm}
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{bibliography/Images/Love_New_Pix.png}}]{Love Allen Chijioke Ahakonye} 
+received Ph.D. in IT-Convergence Engineering from the Networked System Laboratory, IT-Convergence Engineering, Kumoh National Institute of Technology, Gumi, South Korea in 2024. She holds an MSc in Information Technology from the Federal University of Technology, Nigeria, in 2016. In 2001, she got a B.Sc in  Mathematics/Computer Science from the University of Port Harcourt, Nigeria. She has over a decade of experience in the Nigerian oil and gas sector as a Network and System Administrator from 2002 to 2016. In 2017, she briefly worked as a Logistics Superintendent with the Nigerian Petroleum Development Company until 2019. She is also a postdoctoral researcher at the ICT Convergence Research Center (ICT-CRC), Kumoh National Institute of Technology, Gumi, South Korea. She is a member of the IEEE and the Computer Professionals Registration Council of Nigeria (CPN). Her research interest is artificial intelligence (AI) application to the Internet of Things (IoT) and industrial IoT, Supervisory Control and Data Acquisition (SCADA), and industrial control system (ICS) for intrusion/anomaly detection, cyber-security, fault detection, XAI and manufacturing execution systems. 
+\end{IEEEbiography}
+\vspace{-1.1cm}
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in, clip,keepaspectratio]{bibliography/Images/Dong.png.jpg}}]{Dong-Seong Kim (SM'14)} received his Ph.D. degree in Electrical and Computer Engineering from Seoul National University, Seoul, Korea, in 2003. From 1994 to 2003, he worked as a full-time researcher at the ERC-ACI at Seoul National University. From March 2003 to February 2005, he served as a postdoctoral researcher at the Wireless Network Laboratory in the School of Electrical and Computer Engineering at Cornell University, NY. Between 2007 and 2009, he was a visiting professor in the Department of Computer Science at the University of California, Davis, CA. He served as Dean of IACF from 2019 to 2022. He is currently a Professor in the Department of IT Convergence Engineering at the School of Electronic Engineering, Kumoh National Institute of Technology, Gumi, South Korea. He is also the director of the KIT Convergence Research Institute and the ICT Convergence Research Center (ITRC 
+and NRF advanced research center program), supported by the Korean government at Kumoh National Institute of Technology, and the director of NSLab Co., Ltd. He is a senior member of IEEE and ACM. His primary research interests include real-time IoT and smart platforms, industrial wireless control networks, networked embedded systems, Fieldbus, metaverse, and blockchain. 
+\end{IEEEbiography}
+\vspace{-1.1cm}
+%\vspace{-1cm}
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in, clip,keepaspectratio]{bibliography/Images/lee.png}}]{Jae-Min Lee} received his Ph.D. degree in electrical and computer engineering from Seoul National University, Seoul, Korea, in 2005. From 2005 to 2014, he was a senior engineer at Samsung Electronics in Suwon, Korea. From 2015 to 2016, he was a Principal Engineer at Samsung Electronics, Suwon, Korea. Since 2017, he has been an Associate Professor in the School of Electronic Engineering and the Department of IT Convergence Engineering at Kumoh National Institute of Technology, Gyeongbuk, Korea. Since 2024, he has been the Director of the Smart Defense Logistics Innovation Convergence Research Center (ITRC Program). He is a member of IEEE. He is the Executive Director of the Korean Institute of Communications and Information Sciences (KICS). His current main research interests are smart IoT convergence application, industrial wireless control network, UAV, Metaverse and Blockchain.
+\end{IEEEbiography}
+
+\end{document}
+
